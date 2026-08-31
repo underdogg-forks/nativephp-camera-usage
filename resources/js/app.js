@@ -4,12 +4,15 @@ import { RubiksCube3D } from './cube-animator';
 document.addEventListener('DOMContentLoaded', () => {
     if (!document.getElementById('cube-container')) return;
 
-    const cubeApp = new RubiksCube3D('cube-container');
     const playBtn = document.getElementById('play-btn');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
     const errorOverlay = document.getElementById('error-overlay');
 
     const state = window.rubiksCubeState || "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
     let solvedMoves = "";
+    let movesArray = [];
+    let currentMoveIndex = 0;
 
     // Invert a move sequence (used to scramble the 3D cube to match real world)
     function inverseMoves(solutionStr) {
@@ -48,41 +51,75 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Solve on the backend (avoids crashing the Android WebView with heavy computation)
-    if (playBtn) { playBtn.textContent = "Calculating..."; playBtn.disabled = true; }
+    const cubeApp = new RubiksCube3D('cube-container');
 
-    fetch('/api/solve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ cube: state })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.error) {
-            showError("Could not solve: " + data.error + ". Please check the Review tab.");
-            return;
-        }
-
-        // data.solution is a string like "R U' F2 ..."
-        solvedMoves = data.solution;
+    function initializeSolution(solutionStr) {
+        solvedMoves = solutionStr;
+        movesArray = solvedMoves.split(' ').filter(Boolean);
+        currentMoveIndex = 0;
         console.log("Solution:", solvedMoves);
 
-        // Scramble the 3D cube to visually match the real physical cube
         const scrambleMoves = inverseMoves(solvedMoves);
         if (scrambleMoves) cubeApp.applyInstantMoves(scrambleMoves);
 
-        if (playBtn) { playBtn.textContent = "▶ Solve"; playBtn.disabled = false; }
-    })
-    .catch(err => {
-        console.error("Fetch error:", err);
-        showError("Network error. Please make sure the app is running and try again.");
-    });
+        if (playBtn) { playBtn.textContent = "Play All"; playBtn.disabled = false; }
+        if (prevBtn) { prevBtn.disabled = false; }
+        if (nextBtn) { nextBtn.disabled = false; }
+    }
+
+    if (window.rubiksSolution) {
+        initializeSolution(window.rubiksSolution);
+    } else {
+        if (playBtn) { playBtn.textContent = "Calculating..."; playBtn.disabled = true; }
+
+        fetch('/api/solve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ cube: state })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                showError("Could not solve: " + data.error + ". Please check the Review tab.");
+                return;
+            }
+            initializeSolution(data.solution);
+        })
+        .catch(err => {
+            console.error("Fetch error:", err);
+            showError("Network error. Please make sure the app is running and try again.");
+        });
+    }
 
     // Play button: animate the solution
     if (playBtn) {
         playBtn.addEventListener('click', () => {
-            if (solvedMoves) {
-                cubeApp.queueMoves(solvedMoves);
+            if (currentMoveIndex < movesArray.length) {
+                const remainingMoves = movesArray.slice(currentMoveIndex).join(' ');
+                cubeApp.queueMoves(remainingMoves);
+                currentMoveIndex = movesArray.length;
+            }
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            if (cubeApp.isAnimating || cubeApp.moveQueue.length > 0) return; // wait for current animation
+            if (currentMoveIndex < movesArray.length) {
+                cubeApp.queueMoves(movesArray[currentMoveIndex]);
+                currentMoveIndex++;
+            }
+        });
+    }
+
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (cubeApp.isAnimating || cubeApp.moveQueue.length > 0) return; // wait for current animation
+            if (currentMoveIndex > 0) {
+                currentMoveIndex--;
+                const prevMove = movesArray[currentMoveIndex];
+                const invMove = inverseMoves(prevMove);
+                cubeApp.queueMoves(invMove);
             }
         });
     }

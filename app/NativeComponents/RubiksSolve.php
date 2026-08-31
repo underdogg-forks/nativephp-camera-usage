@@ -19,7 +19,6 @@ class RubiksSolve extends NativeComponent
         $faces = Cache::get('rubiks_faces', []);
 
         // Map faces to CubeJS order: U R F D L B
-        // Our scan order: 0:Top, 1:Left, 2:Front, 3:Right, 4:Bottom, 5:Back
         $safeFaces = [];
         for ($i = 0; $i < 6; $i++) {
             $safeFaces[$i] = isset($faces[$i]) && is_array($faces[$i]) && count($faces[$i]) === 9

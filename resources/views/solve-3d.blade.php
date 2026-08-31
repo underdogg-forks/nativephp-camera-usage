@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>3D Solver</title>
     <script>
-        window.rubiksCubeState = "{{ $cubeString }}";
+        window.rubiksCubeState = "{!! $cubeString !!}";
+        window.rubiksSolution = "{!! $solution ?? '' !!}";
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>

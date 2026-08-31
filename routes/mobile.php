@@ -49,7 +49,10 @@ Route::get('/solve-3d', function () {
         $cubeString = 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB';
     }
 
-    return view('solve-3d', ['cubeString' => $cubeString]);
+    return view('solve-3d', [
+        'cubeString' => $cubeString,
+        'solution' => request('solution')
+    ]);
 })->name('solve-3d');
 
 // Route to serve the Hidden WebView that does the image processing
