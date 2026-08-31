@@ -57,12 +57,9 @@
             {{-- Step title --}}
             <native:text class="text-white text-2xl font-bold text-center">{{ $g['emoji'] }} {{ $g['title'] }}</native:text>
 
-            {{-- Physical Photo --}}
-            <native:image src="{{ asset($g['image']) }}" class="w-64 h-64 object-cover rounded-2xl border-4 border-gray-600 my-2" />
-
             {{-- Instruction --}}
-            <native:column class="bg-gray-800 rounded-xl px-4 py-4 mx-2">
-                <native:text class="text-gray-200 text-sm text-center leading-5">{{ $g['detail'] }}</native:text>
+            <native:column class="bg-gray-800 rounded-2xl p-8 mx-4 my-8 justify-center">
+                <native:text class="text-gray-200 text-lg text-center leading-7">{{ $g['detail'] }}</native:text>
             </native:column>
 
             {{-- Step counter --}}
