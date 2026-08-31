@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Cube from 'cubejs';
 
 // Setup CubeJS (must initialize solver with identity or something before use, usually precomputed or we use light mode)
@@ -19,6 +20,11 @@ export class RubiksCube3D {
         this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
         this.renderer.setSize(width, height);
         this.container.appendChild(this.renderer.domElement);
+
+        // Add OrbitControls so the user can drag and rotate the cube
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.enableDamping = true;
+        this.controls.enablePan = false;
 
         // Lighting
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -97,10 +103,13 @@ export class RubiksCube3D {
     animate() {
         requestAnimationFrame(() => this.animate());
 
+        if (this.controls) this.controls.update();
+
         // Auto rotate slowly when not animating moves
         if (!this.isAnimating && this.moveQueue.length === 0) {
-            this.cubeGroup.rotation.y += 0.005;
-            this.cubeGroup.rotation.x += 0.002;
+            // Disabled auto-rotation to make it easier to follow the solution
+            // this.cubeGroup.rotation.y += 0.005;
+            // this.cubeGroup.rotation.x += 0.002;
         }
 
         // Handle moves

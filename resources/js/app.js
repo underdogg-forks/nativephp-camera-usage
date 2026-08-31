@@ -91,35 +91,75 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const moveBadge = document.getElementById('move-badge');
+    const moveDesc = document.getElementById('move-desc');
+
+    function updateMoveText(moveStr) {
+        if (!moveStr) {
+            if (moveBadge) moveBadge.classList.add('hidden');
+            if (moveDesc) moveDesc.classList.add('hidden');
+            return;
+        }
+
+        const face = moveStr[0];
+        const modifier = moveStr.length > 1 ? moveStr.substring(1) : "";
+
+        const faceNames = {
+            'U': 'Top face',
+            'D': 'Bottom face',
+            'R': 'Right face',
+            'L': 'Left face',
+            'F': 'Front face',
+            'B': 'Back face'
+        };
+
+        let direction = 'Clockwise';
+        if (modifier === "'") direction = 'Counter-Clockwise';
+        if (modifier === "2") direction = 'Twice (180°)';
+
+        if (moveBadge) {
+            moveBadge.textContent = "Move: " + moveStr;
+            moveBadge.classList.remove('hidden');
+        }
+        if (moveDesc) {
+            moveDesc.textContent = `${faceNames[face]} — ${direction}`;
+            moveDesc.classList.remove('hidden');
+        }
+    }
+
     // Play button: animate the solution
     if (playBtn) {
         playBtn.addEventListener('click', () => {
-            if (currentMoveIndex < movesArray.length) {
-                const remainingMoves = movesArray.slice(currentMoveIndex).join(' ');
-                cubeApp.queueMoves(remainingMoves);
-                currentMoveIndex = movesArray.length;
+            if (solvedMoves) {
+                cubeApp.queueMoves(solvedMoves);
+                updateMoveText('');
             }
         });
     }
 
+    // Next step
     if (nextBtn) {
         nextBtn.addEventListener('click', () => {
-            if (cubeApp.isAnimating || cubeApp.moveQueue.length > 0) return; // wait for current animation
+            if (cubeApp.isAnimating || cubeApp.moveQueue.length > 0) return;
             if (currentMoveIndex < movesArray.length) {
-                cubeApp.queueMoves(movesArray[currentMoveIndex]);
+                const move = movesArray[currentMoveIndex];
+                cubeApp.queueMoves(move);
+                updateMoveText(move);
                 currentMoveIndex++;
             }
         });
     }
 
+    // Prev step
     if (prevBtn) {
         prevBtn.addEventListener('click', () => {
-            if (cubeApp.isAnimating || cubeApp.moveQueue.length > 0) return; // wait for current animation
+            if (cubeApp.isAnimating || cubeApp.moveQueue.length > 0) return;
             if (currentMoveIndex > 0) {
                 currentMoveIndex--;
-                const prevMove = movesArray[currentMoveIndex];
-                const invMove = inverseMoves(prevMove);
+                const move = movesArray[currentMoveIndex];
+                const invMove = inverseMoves(move);
                 cubeApp.queueMoves(invMove);
+                updateMoveText("Undo " + move);
             }
         });
     }
