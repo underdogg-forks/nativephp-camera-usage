@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import Cube from 'cubejs';
 
 // Setup CubeJS (must initialize solver with identity or something before use, usually precomputed or we use light mode)
 
