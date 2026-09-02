@@ -39,7 +39,7 @@ npm run build
 ```
 
 **4. Install Python Dependencies**
-The backend uses a Python script (`cube_scanner.py`) to process the images. You must install OpenCV and NumPy:
+The backend uses a Python script (`python/cube_scanner.py`) to process the images. You must install OpenCV and NumPy:
 ```bash
 pip install opencv-python numpy
 ```

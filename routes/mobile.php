@@ -71,7 +71,7 @@ Route::post('/api/extract-colors', function (Request $request) {
     $orientation = $request->input('orientation', 1);
 
     // Execute Python OpenCV script
-    $command = escapeshellcmd('python '.base_path('cube_scanner.py')).' '.escapeshellarg($path).' '.escapeshellarg($orientation);
+    $command = escapeshellcmd('python '.base_path('python/cube_scanner.py')).' '.escapeshellarg($path).' '.escapeshellarg($orientation);
     $output = shell_exec($command);
 
     Log::info('Python OpenCV output: '.$output);
@@ -151,7 +151,7 @@ Route::post('/api/process-webrtc-scan', function (Request $request) {
     file_put_contents($path, base64_decode($data));
 
     // Execute Python OpenCV script (we can pass orientation 1 since it's already cropped/upright from JS canvas)
-    $command = escapeshellcmd('python '.base_path('cube_scanner.py')).' '.escapeshellarg($path).' 1';
+    $command = escapeshellcmd('python '.base_path('python/cube_scanner.py')).' '.escapeshellarg($path).' 1';
     $output = shell_exec($command);
 
     Log::info('WebRTC Python OpenCV output: '.$output);
