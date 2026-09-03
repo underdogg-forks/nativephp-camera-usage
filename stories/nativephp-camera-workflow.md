@@ -130,7 +130,7 @@ This prompt is designed for comprehensive research using the Greenfield method, 
 - How does the Android device know how to reach `192.168.1.109`? (WiFi? mDNS broadcast?)
 - What happens if the device loses network connectivity?
 - Is this architecture intended for production, or is it a development-only workaround?
-- Should the backend (Python OpenCV) run on-device, on a dev machine, or on a cloud server?
+- Should OCR processing run on-device, on a dev machine, or via cloud services?
 
 **Research targets:**
 - Network topologies for NativePHP apps (local dev server, remote server, hybrid)
@@ -163,7 +163,7 @@ This prompt is designed for comprehensive research using the Greenfield method, 
 - What is EXIF orientation? (Values 1-8, representing rotations/flips)
 - Does the photo file itself need to be rotated, or is orientation just metadata?
 - On Android, do camera photos always have orientation metadata, or is it sometimes missing?
-- In the Python backend, how are the orientation values used? (cv2.rotate with ROTATE_90_CLOCKWISE, etc.)
+- In the backend, how are the orientation values used during image preprocessing? (Rotation/flipping operations)
 - What happens if orientation is 1 (normal) vs. 6 (90° clockwise)?
 - Why might this matter for receipt scanning?
 
@@ -171,7 +171,7 @@ This prompt is designed for comprehensive research using the Greenfield method, 
 - EXIF orientation tag (Tag 0x0112)
 - How camera apps save orientation metadata
 - Android's exif_read_data in PHP
-- OpenCV image rotation functions
+- Image preprocessing in OCR services (how orientation is handled)
 
 ---
 
@@ -496,9 +496,9 @@ This prompt is designed for comprehensive research using the Greenfield method, 
   - PHP 8.1+
   - Composer
   - Node.js + npm
-  - Python 3.x
   - Android Studio + Emulator
   - Optional: Laragon/XAMPP for local Apache server
+  - OCR API credentials (Google Vision, AWS Textract, or Azure)
 - How do developers debug the app? (Console logs? Breakpoints? Remote debugging?)
 - Is there a way to simulate network failures or slow connections?
 - How do developers verify permissions are working? (Grant/deny camera permission)
@@ -548,18 +548,18 @@ This prompt is designed for comprehensive research using the Greenfield method, 
 ### 10.1 Photo Processing Performance
 
 **Questions to research:**
-- How long does it take to process a photo from capture to color detection?
+- How long does it take to process a photo from capture to OCR results?
 - Is the process fast enough for a smooth user experience? (Immediate feedback vs. waiting)
-- Are there bottlenecks? (Image transmission? Python subprocess startup? OpenCV processing?)
-- Can processing be parallelized? (Process multiple faces concurrently)
-- How does photo resolution affect processing time? (High-res photos = slower processing?)
-- Are there optimizations available? (GPU acceleration? Caching? Pre-computed models?)
+- Are there bottlenecks? (Image transmission? OCR API latency? Network delays? File storage?)
+- Can processing be parallelized? (Batch multiple receipts concurrently)
+- How does photo resolution affect processing time and OCR accuracy?
+- Are there optimizations available? (Image compression? API response caching? Edge processing?)
 
 **Research targets:**
-- Performance profiling of image processing pipelines
-- Benchmarking OpenCV operations
+- Performance profiling of OCR pipelines
+- Benchmarking cloud OCR service latency
 - Memory and CPU usage on mobile devices
-- GPU acceleration with CUDA/OpenGL
+- Image compression/quality trade-offs for OCR
 
 ### 10.2 Network Optimization
 
@@ -581,7 +581,7 @@ This prompt is designed for comprehensive research using the Greenfield method, 
 
 **Questions to research:**
 - Does camera usage drain battery significantly?
-- Does processing images (especially Python + OpenCV) consume a lot of CPU and generate heat?
+- Does OCR processing (especially on-device models) consume a lot of CPU and generate heat?
 - Should there be idle timeouts to save battery?
 - Are there power-saving modes to disable OCR/processing?
 - How long can a user continuously scan receipts before needing to charge?
