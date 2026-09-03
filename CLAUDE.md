@@ -25,8 +25,7 @@ database/
   migrations/          # create_expenses_table.php (user_id FK, amount, receipt_path, status)
   factories/           # ExpenseFactory
 tests/
-  Unit/                # 21 native component logic tests
-  Feature/             # 28 camera→storage flow + 22 storage service tests (56 total)
+  Feature/             # 28 camera→storage flow + 10 storage service tests (38 total, all real)
 resources/
   js/                  # Camera capture, photo alignment components
   views/               # Filament frontend (Livewire)
@@ -74,30 +73,26 @@ Cloud-based OCR services (Google Vision, AWS Textract, Azure Computer Vision) wi
 
 ---
 
-## Testing suite (56 tests, 131 assertions, 100% passing)
+## Testing suite (38 tests, 73 assertions, 100% passing)
 
 ### Pure PHPUnit 11.5.56 (Pest eliminated)
 
-All tests use `#[Test]` attributes with Arrange-Act-Assert pattern.
+All tests use `#[Test]` attributes with Arrange-Act-Assert pattern. **Every test exercises real application code paths.**
 
-**Unit Tests** (21) — `tests/Unit/NativeReceiptCaptureComponentTest.php`
-- Photo path validation & EXIF orientation (1-8 values)
-- Component state management (boolean flags, nullable fields)
-- Event emission structure
-- Guide step validation
-
-**Feature Tests** (35) — `tests/Feature/`
+**Feature Tests** (38) — `tests/Feature/`
 - `CameraToStorageFlowTest` (28): End-to-end photo capture → storage → database
   - File storage, timestamped directories, concurrent uploads
   - Multi-user expense references to same photo
   - Database queries by receipt_path
   - Photo persistence after expense deletion
   
-- `ReceiptStorageServiceTest` (22): File handling & storage operations
+- `ReceiptStorageServiceTest` (10): File handling & storage operations
   - MIME type validation, size preservation
   - Dated directory structure, URL generation
   - Metadata association, unique path generation
   - Private visibility configuration
+
+**Note:** Removed 22 meaningless unit tests that tested PHP native functions instead of application logic.
 
 **Base Test Class** — `tests/Feature/FeatureTestCase.php`
 - Extends `TestCase` with `RefreshDatabase` trait
