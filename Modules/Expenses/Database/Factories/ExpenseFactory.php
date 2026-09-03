@@ -1,9 +1,9 @@
 <?php
 
-namespace Database\Factories;
+namespace Modules\Expenses\Database\Factories;
 
-use App\Models\Expense;
 use App\Models\User;
+use Modules\Expenses\Models\Expense;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

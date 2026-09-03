@@ -1,8 +1,8 @@
 <?php
 
-namespace Tests\Feature;
+namespace Modules\Expenses\Tests\Feature;
 
-use App\Models\Expense;
+use Modules\Expenses\Models\Expense;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;

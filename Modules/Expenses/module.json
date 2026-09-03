@@ -1,0 +1,20 @@
+{
+  "name": "Expenses",
+  "alias": "Expenses",
+  "description": "Expense tracking and receipt management module",
+  "version": "1.0.0",
+  "authors": [
+    {
+      "name": "Niels Drost",
+      "email": "nielsdrost7@gmail.com"
+    }
+  ],
+  "keywords": [
+    "expense",
+    "receipt",
+    "camera",
+    "storage"
+  ],
+  "priority": 0,
+  "active": true
+}
