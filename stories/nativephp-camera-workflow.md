@@ -2,9 +2,9 @@
 
 ## Overview
 
-This document describes the complete end-to-end workflow of how NativePHP (a Laravel-based native mobile framework) integrates with native device cameras to capture, process, and persist images. The use case explored here is capturing restaurant receipts for expense reporting—scanning physical receipts, extracting OCR data (restaurant name, amount, date, items), validating expense data, and submitting expense reports for approval.
+This document describes the complete end-to-end workflow of how NativePHP (a Laravel-based native mobile framework) integrates with native device cameras to capture, process, and persist images for the InvoicePlane Expenses Module. The workflow encompasses: capturing receipt images via native camera, transmitting images to backend processing, extracting structured expense data via OCR, validating against InvoicePlane business rules, and persisting expense records with attached receipt images in the InvoicePlane database.
 
-This prompt is designed for comprehensive research using the Greenfield method, challenging assumptions at each step and drilling deep into implementation details.
+This prompt is designed for comprehensive research using the Greenfield method, challenging assumptions at each step and drilling deep into implementation details specific to InvoicePlane integration.
 
 ---
 
@@ -82,7 +82,7 @@ This prompt is designed for comprehensive research using the Greenfield method, 
 - `NativeComponent` base class in NativePHP
 - The `PhotoTaken` event class and its payload (What data does it contain? Path? Image data? Metadata?)
 - The attribute binding system (`#[On(PhotoTaken::class)]`)
-- State management in `RubiksScan.php` (public properties are reactive)
+- State management in NativeComponents (public properties are reactive)
 
 ### 2.2 Triggering the Camera
 
@@ -141,7 +141,7 @@ This prompt is designed for comprehensive research using the Greenfield method, 
 ### 3.2 HTTP Request Mechanics
 
 **Questions to research:**
-- The code uses `Http::attach('image', file_get_contents($path), 'cube.jpg')`. How does this work?
+- The code uses `Http::attach('image', file_get_contents($path), 'receipt.jpg')`. How does this work?
 - Is this a multipart/form-data POST request?
 - What is the `file_get_contents()` doing? Is it loading the entire photo into memory, or streaming it?
 - If a photo is 5-10 MB (typical high-res smartphone cameras), is loading it entirely into memory safe?
@@ -165,7 +165,7 @@ This prompt is designed for comprehensive research using the Greenfield method, 
 - On Android, do camera photos always have orientation metadata, or is it sometimes missing?
 - In the Python backend, how are the orientation values used? (cv2.rotate with ROTATE_90_CLOCKWISE, etc.)
 - What happens if orientation is 1 (normal) vs. 6 (90° clockwise)?
-- Why might this matter for cube/receipt scanning?
+- Why might this matter for receipt scanning?
 
 **Research targets:**
 - EXIF orientation tag (Tag 0x0112)
@@ -335,8 +335,8 @@ This prompt is designed for comprehensive research using the Greenfield method, 
 
 **Questions to research:**
 - After a photo is processed, is it deleted immediately, or stored somewhere?
-- The app caches color data in `Cache::put('rubiks_faces', $allFaces)`. Is the photo itself cached?
-- If the user closes the app without solving the cube, is the cached color data lost?
+- The app caches OCR results and extracted data. Is the photo itself cached?
+- If the user closes the app without submitting the expense, is the cached data lost?
 - Is there a way to retrieve a photo for manual review later?
 - For receipt scanning use case, where would scanned receipt images be stored for InvoicePlane integration?
 - Should photos be stored locally (on-device) or uploaded to a server?
