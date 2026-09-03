@@ -10,14 +10,14 @@ class NativeReceiptCaptureComponentTest extends TestCase
     #[Test]
     public function it_validates_photo_path_as_string(): void
     {
-        /** @arrange Set a photo path */
+        /** Arrange */
         $photoPath = '/data/user/0/com.example.app/cache/photo_12345.jpg';
 
-        /** @act Check path type and validity */
+        /** Act */
         $isString = is_string($photoPath);
         $isNotEmpty = !empty($photoPath);
 
-        /** @assert Path should be a non-empty string */
+        /** Assert */
         $this->assertTrue($isString);
         $this->assertTrue($isNotEmpty);
     }
@@ -25,14 +25,14 @@ class NativeReceiptCaptureComponentTest extends TestCase
     #[Test]
     public function it_validates_photo_path_contains_expected_structure(): void
     {
-        /** @arrange Set a photo path */
+        /** Arrange */
         $photoPath = '/data/user/0/com.example.app/cache/photo_12345.jpg';
 
-        /** @act Check directory structure and extension */
+        /** Act */
         $hasCacheDir = str_contains($photoPath, '/cache/');
         $hasValidExtension = str_ends_with($photoPath, '.jpg') || str_ends_with($photoPath, '.png');
 
-        /** @assert Path should contain cache directory and valid extension */
+        /** Assert */
         $this->assertTrue($hasCacheDir);
         $this->assertTrue($hasValidExtension);
     }
@@ -40,15 +40,15 @@ class NativeReceiptCaptureComponentTest extends TestCase
     #[Test]
     public function it_validates_exif_orientation_as_valid_integer(): void
     {
-        /** @arrange Set valid EXIF orientation values */
+        /** Arrange */
         $validOrientations = [1, 2, 3, 4, 5, 6, 7, 8];
 
-        /** @act Check each orientation value */
+        /** Act */
         foreach ($validOrientations as $orientation) {
             $isInt = is_int($orientation);
             $inRange = $orientation >= 1 && $orientation <= 8;
 
-            /** @assert Each value should be integer in valid range */
+            /** Assert */
             $this->assertTrue($isInt);
             $this->assertTrue($inRange);
         }
@@ -57,27 +57,27 @@ class NativeReceiptCaptureComponentTest extends TestCase
     #[Test]
     public function it_sets_default_exif_orientation_to_one(): void
     {
-        /** @arrange Define default orientation */
+        /** Arrange */
         $defaultOrientation = 1;
 
-        /** @act Check the value */
+        /** Act */
         $isOne = $defaultOrientation === 1;
 
-        /** @assert Default orientation should be 1 */
+        /** Assert */
         $this->assertTrue($isOne);
     }
 
     #[Test]
     public function it_includes_timestamp_in_photo_metadata(): void
     {
-        /** @arrange Get current timestamp */
+        /** Arrange */
         $timestamp = now();
 
-        /** @act Check timestamp validity */
+        /** Act */
         $isNotNull = $timestamp !== null;
         $isCurrentSecond = $timestamp->isCurrentSecond();
 
-        /** @assert Timestamp should be current and valid */
+        /** Assert */
         $this->assertTrue($isNotNull);
         $this->assertTrue($isCurrentSecond);
     }
@@ -85,36 +85,36 @@ class NativeReceiptCaptureComponentTest extends TestCase
     #[Test]
     public function it_validates_active_face_index_as_integer_or_null(): void
     {
-        /** @arrange Set index to null initially */
+        /** Arrange */
         $activeFaceIndex = null;
 
-        /** @act Check null state */
+        /** Act */
         $isNullInitially = $activeFaceIndex === null;
 
-        /** @assert Should be null initially */
+        /** Assert */
         $this->assertTrue($isNullInitially);
 
-        /** @arrange Set index to integer */
+        /** Arrange */
         $activeFaceIndex = 0;
 
-        /** @act Check integer state */
+        /** Act */
         $isInt = is_int($activeFaceIndex);
 
-        /** @assert Should be integer after assignment */
+        /** Assert */
         $this->assertTrue($isInt);
     }
 
     #[Test]
     public function it_initializes_scanned_faces_array_as_empty(): void
     {
-        /** @arrange Create scanned faces array */
+        /** Arrange */
         $scannedFaces = [];
 
-        /** @act Check array state */
+        /** Act */
         $isArray = is_array($scannedFaces);
         $isEmpty = empty($scannedFaces);
 
-        /** @assert Array should be empty initially */
+        /** Assert */
         $this->assertTrue($isArray);
         $this->assertTrue($isEmpty);
     }
@@ -122,23 +122,23 @@ class NativeReceiptCaptureComponentTest extends TestCase
     #[Test]
     public function it_allows_pending_photo_path_state_to_be_set(): void
     {
-        /** @arrange Initialize pending path as null */
+        /** Arrange */
         $pendingPhotoPath = null;
 
-        /** @act Check initial state */
+        /** Act */
         $isNullInitially = $pendingPhotoPath === null;
 
-        /** @assert Should be null */
+        /** Assert */
         $this->assertTrue($isNullInitially);
 
-        /** @arrange Set pending path */
+        /** Arrange */
         $pendingPhotoPath = '/storage/expenses/receipts/2024/09/03/abc123.jpg';
 
-        /** @act Check new state */
+        /** Act */
         $isNotNull = $pendingPhotoPath !== null;
         $isString = is_string($pendingPhotoPath);
 
-        /** @assert Should now be non-null string */
+        /** Assert */
         $this->assertTrue($isNotNull);
         $this->assertTrue($isString);
     }
@@ -146,104 +146,104 @@ class NativeReceiptCaptureComponentTest extends TestCase
     #[Test]
     public function it_manages_is_aligning_flag_as_boolean(): void
     {
-        /** @arrange Set aligning flag to false */
+        /** Arrange */
         $isAligning = false;
 
-        /** @act Check initial state */
+        /** Act */
         $isBool = is_bool($isAligning);
         $isFalse = $isAligning === false;
 
-        /** @assert Flag should be boolean false */
+        /** Assert */
         $this->assertTrue($isBool);
         $this->assertTrue($isFalse);
 
-        /** @arrange Set flag to true */
+        /** Arrange */
         $isAligning = true;
 
-        /** @act Check new state */
+        /** Act */
         $isTrue = $isAligning === true;
 
-        /** @assert Flag should be boolean true */
+        /** Assert */
         $this->assertTrue($isTrue);
     }
 
     #[Test]
     public function it_manages_is_processing_flag_as_boolean(): void
     {
-        /** @arrange Set processing flag to false */
+        /** Arrange */
         $isProcessing = false;
 
-        /** @act Check initial state */
+        /** Act */
         $isBool = is_bool($isProcessing);
 
-        /** @assert Flag should be boolean */
+        /** Assert */
         $this->assertTrue($isBool);
 
-        /** @arrange Set flag to true */
+        /** Arrange */
         $isProcessing = true;
 
-        /** @act Check new state */
+        /** Act */
         $isTrue = $isProcessing === true;
 
-        /** @assert Flag should be true */
+        /** Assert */
         $this->assertTrue($isTrue);
     }
 
     #[Test]
     public function it_manages_error_message_as_string_or_null(): void
     {
-        /** @arrange Initialize error message as null */
+        /** Arrange */
         $errorMessage = null;
 
-        /** @act Check initial state */
+        /** Act */
         $isNull = $errorMessage === null;
 
-        /** @assert Should be null */
+        /** Assert */
         $this->assertTrue($isNull);
 
-        /** @arrange Set error message */
+        /** Arrange */
         $errorMessage = 'Failed to process image';
 
-        /** @act Check new state */
+        /** Act */
         $isString = is_string($errorMessage);
 
-        /** @assert Should be string */
+        /** Assert */
         $this->assertTrue($isString);
     }
 
     #[Test]
     public function it_manages_show_guide_flag_as_boolean(): void
     {
-        /** @arrange Set guide flag to false */
+        /** Arrange */
         $showGuide = false;
 
-        /** @act Check state */
+        /** Act */
         $isBool = is_bool($showGuide);
 
-        /** @assert Flag should be boolean */
+        /** Assert */
         $this->assertTrue($isBool);
 
-        /** @arrange Set to true */
+        /** Arrange */
         $showGuide = true;
 
-        /** @act Check new state */
+        /** Act */
         $isTrue = $showGuide === true;
 
-        /** @assert Flag should be true */
+        /** Assert */
         $this->assertTrue($isTrue);
     }
 
     #[Test]
     public function it_validates_guide_step_as_positive_integer(): void
     {
-        /** @arrange Set guide step */
+        /** Arrange */
         $guideStep = 1;
 
-        /** @act Check type and value */
+        /** Act */
         $isInt = is_int($guideStep);
         $isPositive = $guideStep > 0;
 
-        /** @assert Should be positive integer */
+        /** Assert */
         $this->assertTrue($isInt);
         $this->assertTrue($isPositive);
     }
@@ -251,7 +251,7 @@ class NativeReceiptCaptureComponentTest extends TestCase
     #[Test]
     public function it_resets_component_state_to_initial_values(): void
     {
-        /** @arrange Set component state with values */
+        /** Arrange */
         $componentState = [
             'activeFaceIndex' => 0,
             'pendingPhotoPath' => '/path/to/photo.jpg',
@@ -259,7 +259,7 @@ class NativeReceiptCaptureComponentTest extends TestCase
             'errorMessage' => 'Some error',
         ];
 
-        /** @act Reset state to initial values */
+        /** Act */
         $componentState = [
             'activeFaceIndex' => null,
             'pendingPhotoPath' => null,
@@ -267,7 +267,7 @@ class NativeReceiptCaptureComponentTest extends TestCase
             'errorMessage' => null,
         ];
 
-        /** @assert All values should be reset */
+        /** Assert */
         $this->assertNull($componentState['activeFaceIndex']);
         $this->assertNull($componentState['pendingPhotoPath']);
         $this->assertFalse($componentState['isAligning']);
@@ -277,16 +277,16 @@ class NativeReceiptCaptureComponentTest extends TestCase
     #[Test]
     public function it_validates_photo_file_extension_is_valid_image_type(): void
     {
-        /** @arrange Define valid extensions */
+        /** Arrange */
         $validExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
-        /** @act Check each extension */
+        /** Act */
         foreach ($validExtensions as $ext) {
             $filename = "photo.{$ext}";
             $extractedExt = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
             $isValid = in_array($extractedExt, $validExtensions);
 
-            /** @assert Each extension should be valid */
+            /** Assert */
             $this->assertTrue($isValid);
         }
     }
@@ -294,14 +294,14 @@ class NativeReceiptCaptureComponentTest extends TestCase
     #[Test]
     public function it_defines_camera_permission_constant(): void
     {
-        /** @arrange Set permission constant */
+        /** Arrange */
         $permission = 'camera';
 
-        /** @act Check constant type and value */
+        /** Act */
         $isString = is_string($permission);
         $isCorrect = $permission === 'camera';
 
-        /** @assert Permission should be 'camera' string */
+        /** Assert */
         $this->assertTrue($isString);
         $this->assertTrue($isCorrect);
     }
@@ -309,17 +309,17 @@ class NativeReceiptCaptureComponentTest extends TestCase
     #[Test]
     public function it_structures_photo_taken_event_with_required_fields(): void
     {
-        /** @arrange Create photo taken event */
+        /** Arrange */
         $photoTakenEvent = [
             'path' => '/data/user/0/com.example.app/cache/photo_xyz.jpg',
             'timestamp' => now()->toIso8601String(),
         ];
 
-        /** @act Check event structure */
+        /** Act */
         $hasPath = array_key_exists('path', $photoTakenEvent);
         $hasTimestamp = array_key_exists('timestamp', $photoTakenEvent);
 
-        /** @assert Event should have required fields */
+        /** Assert */
         $this->assertTrue($hasPath);
         $this->assertTrue($hasTimestamp);
         $this->assertIsString($photoTakenEvent['path']);
@@ -329,13 +329,13 @@ class NativeReceiptCaptureComponentTest extends TestCase
     #[Test]
     public function it_emits_photo_taken_event_with_path(): void
     {
-        /** @arrange Prepare event data */
+        /** Arrange */
         $photoPath = '/data/cache/photo.jpg';
 
-        /** @act Create event with path */
+        /** Act */
         $eventData = ['path' => $photoPath];
 
-        /** @assert Event should contain the path */
+        /** Assert */
         $this->assertArrayHasKey('path', $eventData);
         $this->assertEquals($photoPath, $eventData['path']);
     }
