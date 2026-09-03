@@ -4,6 +4,7 @@ namespace Modules\Expenses\Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
 
 abstract class FeatureTestCase extends TestCase
@@ -13,7 +14,15 @@ abstract class FeatureTestCase extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->runModuleMigrations();
         $this->createDefaultUser();
+    }
+
+    protected function runModuleMigrations(): void
+    {
+        Artisan::call('migrate', [
+            '--path' => 'Modules/Expenses/Database/Migrations',
+        ]);
     }
 
     protected function createDefaultUser(): void

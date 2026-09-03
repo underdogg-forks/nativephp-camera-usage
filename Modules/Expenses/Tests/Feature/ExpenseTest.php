@@ -24,7 +24,7 @@ class ExpenseTest extends FeatureTestCase
             'expense_number' => 'EXP-001',
             'expense_status' => ExpenseStatus::DRAFT->value,
             'expense_type' => ExpenseType::FIXED->value,
-            'expensed_at' => now()->format('Y-m-d'),
+            'expensed_at' => now()->format('Y-m-d H:i:s'),
             'expense_amount' => 120.00,
             'currency' => 'USD',
             'description' => 'Office chairs',
@@ -34,8 +34,14 @@ class ExpenseTest extends FeatureTestCase
         $expense = Expense::create($payload);
 
         /* Assert */
-        $this->assertDatabaseHas('expenses', $payload);
         $this->assertNotNull($expense->id);
+        $this->assertDatabaseHas('expenses', [
+            'expense_number' => 'EXP-001',
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'expense_status' => ExpenseStatus::DRAFT->value,
+            'expense_type' => ExpenseType::FIXED->value,
+        ]);
         $this->assertEquals(ExpenseStatus::DRAFT, $expense->expense_status);
         $this->assertEquals(ExpenseType::FIXED, $expense->expense_type);
     }

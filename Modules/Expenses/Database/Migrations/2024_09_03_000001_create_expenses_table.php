@@ -10,18 +10,22 @@ return new class extends Migration
     {
         Schema::create('expenses', function (Blueprint $table) {
             $table->id();
+            $table->string('expense_number')->unique();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->decimal('amount', 10, 2);
+            $table->unsignedBigInteger('category_id')->nullable();
+            $table->unsignedBigInteger('customer_id')->nullable();
+            $table->string('expense_type')->default('one_time');
+            $table->string('expense_status')->default('draft');
+            $table->decimal('expense_amount', 10, 2);
             $table->string('currency')->default('USD');
             $table->string('receipt_path')->nullable();
             $table->text('description')->nullable();
-            $table->date('expense_date');
-            $table->string('status')->default('pending'); // pending, approved, rejected
+            $table->date('expensed_at');
             $table->timestamps();
 
-            $table->index('user_id');
-            $table->index('expense_date');
-            $table->index('status');
+            $table->foreign('category_id')->references('id')->on('expense_categories')->onDelete('set null');
+            $table->index(['user_id', 'expensed_at', 'expense_status']);
+            $table->index(['category_id', 'customer_id', 'expense_type']);
         });
     }
 
