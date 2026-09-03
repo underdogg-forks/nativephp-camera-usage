@@ -3,16 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\Expense;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
 
-class CameraToStorageFlowTest extends TestCase
+class CameraToStorageFlowTest extends FeatureTestCase
 {
-    use RefreshDatabase;
-
     protected function setUp(): void
     {
         parent::setUp();

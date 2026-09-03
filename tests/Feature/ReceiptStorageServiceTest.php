@@ -2,16 +2,12 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\TestCase;
 
-class ReceiptStorageServiceTest extends TestCase
+class ReceiptStorageServiceTest extends FeatureTestCase
 {
-    use RefreshDatabase;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -296,8 +292,8 @@ class ReceiptStorageServiceTest extends TestCase
         $path = Storage::disk('expenses')->putFile('receipts', $file);
 
         /** Assert */
-        $this->assertStringNotStartsWith('/', $path);
-        $this->assertStringStartsWith('receipts', $path);
+        $this->assertFalse(str_starts_with($path, '/'));
+        $this->assertTrue(str_starts_with($path, 'receipts'));
     }
 
     #[Test]
