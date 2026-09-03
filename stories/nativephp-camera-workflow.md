@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the complete end-to-end workflow of how NativePHP (a Laravel-based native mobile framework) integrates with native device cameras to capture, process, and persist images. The use case explored here is scanning physical documents (receipts) for optical character recognition (OCR) and automated data extraction, with the goal of storing results in InvoicePlane.
+This document describes the complete end-to-end workflow of how NativePHP (a Laravel-based native mobile framework) integrates with native device cameras to capture, process, and persist images. The use case explored here is capturing restaurant receipts for expense reporting—scanning physical receipts, extracting OCR data (restaurant name, amount, date, items), validating expense data, and submitting expense reports for approval.
 
 This prompt is designed for comprehensive research using the Greenfield method, challenging assumptions at each step and drilling deep into implementation details.
 
@@ -37,6 +37,7 @@ This prompt is designed for comprehensive research using the Greenfield method, 
 - Where does the `config/nativephp.php` configuration get applied? (Android SDK versions, permissions, build flags)
 - What is the purpose of the `7-Zip` location configuration?
 - How are environment variables (`.env`) handled during the build? Are they stripped for production?
+- Should OCR API keys be embedded in the app or retrieved securely at runtime?
 
 **Research targets:**
 - The Gradle build system's role in NativePHP
@@ -44,6 +45,7 @@ This prompt is designed for comprehensive research using the Greenfield method, 
 - The compilation/bundling of Blade templates into the native app
 - The cleanup of sensitive environment keys (AWS_*, GITHUB_*, DB_PASSWORD, etc.)
 - ProGuard/R8 obfuscation settings and their impact on app size
+- Secure credential storage for cloud OCR services
 
 ### 1.3 Platform-Specific Camera Permission Handling
 
@@ -173,160 +175,157 @@ This prompt is designed for comprehensive research using the Greenfield method, 
 
 ---
 
-## 4. BACKEND IMAGE PROCESSING (PYTHON + OPENCV)
+## 4. BACKEND OCR PROCESSING (CLOUD AND LOCAL OPTIONS)
 
-### 4.1 The Python Processing Pipeline
-
-**Questions to research:**
-- The Python script (`python/cube_scanner.py`) is called via shell_exec(). Why not use a Python library directly?
-- How does the PHP backend invoke the Python script? (operating system shell?)
-- What happens if Python or OpenCV isn't installed?
-- Can this be done asynchronously, or does the PHP request block until the Python process completes?
-- What is the performance profile? (Time to process a typical photo)
-- Does the Python process persist between calls, or is it spawned fresh each time?
-- Can the Python script handle concurrent requests, or will they bottleneck?
-
-**Research targets:**
-- `shell_exec()` behavior and security implications
-- Process management in PHP
-- Python subprocess communication
-- OpenCV initialization overhead
-- Scaling considerations for multi-user scenarios
-
-### 4.2 Edge Detection and Quadrilateral Finding
+### 4.1 OCR Service Architecture
 
 **Questions to research:**
-- The script uses `cv2.Canny()` for edge detection. What does this do?
-- What are the parameters (30, 150) in `cv2.Canny(blurred, 30, 150)`?
-- How does morphological operations (dilate/erode) improve edge detection?
-- The script looks for "the largest convex quadrilateral" (the cube/receipt face). Why quadrilateral?
-- How does `cv2.approxPolyDP()` approximate the contour to a polygon?
-- What happens if the photo contains multiple quadrilaterals (e.g., background objects)?
-- How does the script ensure it finds the cube face and not a book, poster, or other rectangular object?
-- What minimum area threshold is used? (width * height * 0.05 = 5% of image)
+- Should OCR happen via cloud services (Google Vision, AWS Textract, Azure Computer Vision) or on-device?
+- What are the pros/cons of each approach? (Cost, latency, accuracy, privacy, offline capability)
+- Which cloud OCR services offer restaurant/receipt-specific models?
+- How much do cloud OCR services cost per image?
+- Can OCR results be cached to reduce API calls?
+- What is the typical latency for cloud OCR? (Milliseconds? Seconds?)
+- How does OCR accuracy vary between services?
+- Should there be a fallback to a different OCR service if one fails?
 
 **Research targets:**
-- Canny edge detection algorithm and parameters
-- Morphological operations in image processing
-- Contour detection and convex hull analysis
-- Polygon approximation and the Ramer-Douglas-Peucker algorithm
-- How to distinguish cube faces from other rectangles in the scene
+- Google Cloud Vision API for text extraction
+- AWS Textract for document analysis and OCR
+- Azure Computer Vision OCR
+- On-device OCR alternatives (Tesseract)
+- OCR accuracy benchmarks and metrics
+- Cost comparison of OCR services
 
-### 4.3 Perspective Transform (Birds-Eye View)
+### 4.2 Text Extraction from Receipt Images
 
 **Questions to research:**
-- The script applies a perspective transform to create a birds-eye view of the cube face. Why?
-- How does `cv2.getPerspectiveTransform()` work? What is the mathematical principle?
-- The script determines the output size as `side = max(maxWidth, maxHeight)`. Why not fix it to 300x300?
-- If a cube face is photographed at an angle, does the perspective transform correct the angle to frontal?
-- After transformation, is the cube face guaranteed to be perfectly aligned for 3x3 grid sampling?
-- What precision is lost in the transformation? (Blurring? Aliasing?)
-- How is the inverse transform used to map sample coordinates back to the original image?
+- What text does OCR extract from a restaurant receipt? (Restaurant name, date, items, amounts, tax, total)
+- How does OCR handle handwritten vs. printed text?
+- Can OCR distinguish between item descriptions and prices?
+- How are multi-line items handled? (Item name on one line, price on another)
+- How does OCR handle currency symbols and formatting?
+- What about receipts with poor lighting, wrinkled paper, or faded ink?
+- Should there be confidence scores for extracted text?
+- How are receipts in different languages handled?
 
 **Research targets:**
-- Homography and perspective transformation in computer vision
-- Four-point perspective correction
-- How to verify the output is square and properly oriented
-- Interpolation methods in image warping
+- OCR confidence and accuracy metrics
+- Handwriting recognition capabilities
+- Layout analysis and structured data extraction
+- Multi-language OCR support
+- Receipt-specific OCR models (if available)
 
-### 4.4 Color Sampling and HSV Mapping
+### 4.3 Structured Data Parsing from OCR Output
 
 **Questions to research:**
-- Why does the script sample the center 20% of each 3x3 tile instead of the entire tile?
-- What is HSV color space? How does it differ from RGB?
-- The `map_color_hsv()` function maps BGR to HSV, then classifies colors into Rubik's cube faces (U=White, R=Red, F=Green, etc.). How accurate is this?
-- What are the HSV ranges for each color? (e.g., Red is 0-10 or 165-180 hue)
-- Why is saturation threshold set to 60? (Mentioned in comment: "to account for warm room lighting")
-- How does lighting affect color detection? (Fluorescent vs. daylight vs. tungsten)
-- What if the cube has stickers that are worn or misaligned?
-- How does the script handle reflections or shadows on the cube?
+- After OCR extracts raw text, how is it parsed into structured data?
+- What data should be extracted? (Restaurant name, date, time, items, amounts, tax, total, payment method)
+- Should parsing use regex, NLP, or machine learning?
+- How does the app handle variations in receipt formats? (Different restaurants, POS systems)
+- Can line items be reliably parsed? (Item name + price matching)
+- How are special items handled? (Discounts, taxes, gratuity)
+- Should there be manual review/correction of parsed data before submission?
+- What confidence thresholds are acceptable for auto-submission?
 
 **Research targets:**
-- HSV color space: Hue, Saturation, Value/Brightness
-- RGB to HSV conversion formula
-- Lighting robustness in color detection
-- Median filtering for noise reduction
-- How different lighting conditions affect hue and saturation
+- NLP libraries for receipt parsing
+- Regex patterns for common receipt formats
+- Machine learning models for structured data extraction
+- Confidence scoring and validation rules
+- User feedback loops for training parsers
 
-### 4.5 Fallback Mechanism
+### 4.4 Data Validation and Enrichment
 
 **Questions to research:**
-- If no quadrilateral is detected (no clear cube face in the image), the script falls back to sampling the center 60% of the image. How robust is this fallback?
-- Does this fallback ever produce usable results, or is it just a graceful failure mode?
-- Should the app inform the user that edge detection failed?
+- How is extracted data validated? (Date format, amount range, currency)
+- Should the app verify restaurant name against a database?
+- Should there be business rules for expense validation? (Maximum amount per meal, duplicate detection)
+- Can missing data be inferred? (If date is missing, use capture timestamp)
+- Should receipt images be stored as proof? (Compliance requirement)
+- How long should receipt images be retained?
+- Should receipt data be encrypted at rest?
 
 **Research targets:**
-- Graceful degradation in computer vision
-- User feedback for failed detections
-- Confidence scores for detection results
+- Input validation and data sanitization
+- Business rule engines
+- Compliance requirements for expense data
+- Data retention and archival policies
+- Encryption at rest for sensitive data
 
-### 4.6 Debug Image Generation
+### 4.5 Receipt Image Quality Assessment
 
 **Questions to research:**
-- The script returns a base64-encoded debug image showing the detected cube boundary, sampled points, and colors. How is this used?
-- The debug image is displayed to the user in the "Review" screen. Why is this important for UX?
-- Does the user ever need to manually adjust the detected colors after seeing the debug image?
-- How does the base64 encoding affect performance? (Overhead of encoding/decoding)
-- Is the debug image stored permanently or discarded after review?
+- Should the app assess receipt image quality before sending to OCR?
+- What makes a "good" receipt photo? (Brightness, focus, angle, text legibility)
+- Should the app provide guidance for better photos? ("Move closer", "Better lighting")
+- Can image quality be assessed without OCR?
+- Should poor-quality images be rejected or flagged for manual review?
+- How does image quality affect OCR accuracy?
 
 **Research targets:**
-- Base64 encoding/decoding overhead
-- Visual feedback in mobile UX for computer vision results
-- How debug output helps users verify OCR results
+- Image quality metrics (sharpness, contrast, brightness)
+- Computer vision for quality assessment
+- User guidance for better photos
 
 ---
 
 ## 5. DATA FLOW: PHOTOS TO LARAVEL ROUTES
 
-### 5.1 The API Route for Color Extraction
+### 5.1 The OCR Processing API Route
 
 **Questions to research:**
-- The route `/api/extract-colors` receives an image upload and returns JSON with colors. Is this stateless?
-- How does the app distinguish between different faces if it's processing them one at a time?
+- The route `/api/process-receipt` receives an image upload and returns JSON with extracted text and structured data. Is this stateless?
+- How does the app identify which receipt is being processed? (Sequential processing?)
 - The route receives `orientation` as a form parameter. Is this always reliable from exif_read_data?
 - What happens if two photos are uploaded simultaneously? (Race condition? Concurrent processing?)
-- How are the colors stored? (In PHP Cache? In-memory? Persistent?)
-- The cache key is `'rubiks_faces'`. Is this global for all users, or per-session?
+- How are OCR results stored? (In PHP Cache? In-memory? Database? Permanent storage?)
+- Should OCR results be cached to reduce API calls for similar receipts?
+- What is the expected latency? (Should users wait for results, or is async processing better?)
 
 **Research targets:**
 - Laravel Cache facade and drivers (file, Redis, database, array)
-- Session vs. global caching in multi-user apps
+- Async/queue-based processing vs. synchronous API calls
 - Race conditions in concurrent image processing
+- OCR result caching strategies
 - Request/response lifecycle for file uploads
 
-### 5.2 The Solve API Route
+### 5.2 The Expense Submission API Route
 
 **Questions to research:**
-- The `/api/solve` route receives a 54-character cube string and invokes Node.js cubejs to solve it.
-- Why Node.js? Why not PHP? Why not Python?
-- The code invokes node.exe directly via shell_exec(). What are the security implications?
-- The command is: `node.exe -e "const Cube = require('cubejs'); ..."`
-- Is cubejs a npm package? How is it installed and discovered by shell_exec()?
-- What does "solve" mean? Does it compute the sequence of moves to solve the cube?
-- How long does a solve take? (Milliseconds? Seconds?)
-- Can the solution be verified before returning it to the app?
+- The `/api/submit-expense` route receives parsed expense data and creates an expense record.
+- What data is required? (Restaurant name, amount, date, items, category, project/cost center)
+- Should submission happen immediately after photo capture, or after user review?
+- Does the app validate data before submission?
+- Can users edit extracted data before submission?
+- How is the original receipt image stored? (As an attachment to the expense record?)
+- What happens if submission fails? (Retry? Local storage? Queue?)
+- Should there be a receipt image attached to each expense report for audit?
 
 **Research targets:**
-- cubejs npm package: purpose, algorithm, performance
-- Shell command injection risks
-- Node.js subprocess vs. persistent server
-- Verification of cube solutions (is a solution always valid?)
-- Time complexity of the Rubik's cube solver
+- Expense data models and validation rules
+- File attachment handling for receipt images
+- Error handling and retry logic
+- User review workflows
+- Audit trail and compliance requirements
 
-### 5.3 The 3D Solver WebView Route
+### 5.3 The Expense Review and Approval Workflow
 
 **Questions to research:**
-- The `/solve-3d` route loads a view with a 3D interactive cube. Is this a native component or a WebView?
-- The cube string is passed to a JavaScript file (presumably using Three.js). How is the data passed?
-- Can the user interact with the 3D cube? (Rotate, animate?)
-- Does the 3D solver display the solution moves step-by-step?
-- What is the relationship between the Rubik's cube solver (backend computation) and the 3D visualizer (frontend animation)?
+- After an expense is submitted, what is the approval workflow?
+- Who reviews expenses? (Manager? Finance team? Automated rules?)
+- Can expenses be rejected? What is the feedback mechanism?
+- Can users update expenses after submission?
+- How are approved expenses integrated with accounting systems?
+- Should there be a dashboard showing expense status?
+- Can batch operations (approve multiple expenses) be performed?
 
 **Research targets:**
-- WebView in NativePHP (is it Chromium-based? System WebKit?)
-- Three.js for 3D visualization
-- Data passing from PHP to JavaScript in WebViews
-- Animation and interactivity in WebViews
+- Workflow engines and approval systems
+- Role-based access control for expense management
+- Integration with accounting and ERP systems
+- Status tracking and notifications
+- Compliance and audit logging
 
 ---
 
@@ -402,78 +401,89 @@ This prompt is designed for comprehensive research using the Greenfield method, 
 
 ---
 
-## 8. SCALING TO RECEIPT SCANNING + INVOICEPLANE
+## 8. SCALING TO RESTAURANT RECEIPT SCANNING + EXPENSE MANAGEMENT
 
-### 8.1 Adapting for Receipt Scanning
-
-**Questions to research:**
-- How would the current Rubik's cube scanning architecture be adapted for receipt scanning?
-- Receipt scanning requires OCR (Optical Character Recognition), not just color detection. How would this work?
-- Should OCR happen on-device (using a library like Tesseract) or on a backend server?
-- After OCR, how would invoice data (line items, totals, dates) be extracted from the raw text?
-- Should this extraction happen with regex, NLP, or a dedicated invoice parsing service?
-- How would the data be validated? (Is this a real invoice? Are amounts reasonable?)
-
-**Research targets:**
-- Tesseract OCR: on-device vs. server-side
-- Invoice parsing libraries and services
-- Data validation for financial documents
-- Performance implications of OCR processing
-
-### 8.2 InvoicePlane Integration
+### 8.1 Expense Reporting Architecture
 
 **Questions to research:**
-- What is InvoicePlane? (A self-hosted invoicing application)
-- What API does InvoicePlane expose for programmatic invoice creation?
-- Can invoices be created via REST API, or must they be entered through the UI?
-- What data format does InvoicePlane expect? (JSON? Form data? Database records?)
-- Should the NativePHP app directly call InvoicePlane's API, or should it go through an intermediate backend?
-- How are user/vendor/customer relationships modeled in InvoicePlane?
-- Should receipts be stored as attachments to invoices in InvoicePlane?
+- What is the target audience? (Individual contributors? Teams? Enterprise?)
+- Should the system integrate with existing expense management platforms (Expensify, Concur, Woven)?
+- Or should it be a standalone expense tracking system?
+- What is the approval workflow? (Self-approval? Manager approval? Finance approval?)
+- Should there be budget tracking and alerts?
+- Should expenses be categorized? (Meals, transportation, supplies, entertainment)
+- Should there be project/cost center tracking for billing purposes?
+- How are personal vs. business expenses determined?
 
 **Research targets:**
-- InvoicePlane architecture and API
-- Invoice data models and relationships
-- File attachment handling in invoicing systems
-- Multi-user and account management in InvoicePlane
+- Expense management system architectures
+- Integration with accounting software (QuickBooks, Xero, NetSuite)
+- Compliance requirements (T&E policies, tax reporting, fraud detection)
+- Multi-level approval workflows
+- Budget and cost tracking systems
 
-### 8.3 Data Pipeline: Receipt → OCR → Invoice
+### 8.2 OCR and Receipt Parsing
+
+**Questions to research:**
+- What data is needed from a restaurant receipt? (Restaurant name, date, time, items, amounts, tax, tip, total)
+- Should the app extract line items (individual dishes) or just totals?
+- How should business meals (multi-person lunches) be handled?
+- Should the app calculate per-person amounts?
+- How should gratuity/tips be handled? (Included in expense amount? Separate line item?)
+- Should receipts be categorized automatically? (Business meal, entertainment, travel-related meal)
+- Should there be merchant category codes or vendor lookups?
+
+**Research targets:**
+- Restaurant data extraction from receipts
+- Receipt parsing libraries and services
+- Business rule engines for expense categorization
+- Merchant data lookup (restaurant name, category, location)
+- Tax and tip calculation rules
+
+### 8.3 Data Pipeline: Receipt → OCR → Expense Report
 
 **Questions to research:**
 - What is the end-to-end data flow?
-  - User scans receipt with NativePHP app
+  - User scans restaurant receipt with NativePHP app
   - Receipt image is transmitted to backend
-  - Backend runs OCR (Tesseract/cloud service)
-  - OCR output is parsed to extract invoice data
-  - Invoice data is validated and formatted
-  - Invoice is created in InvoicePlane via API
-  - User is notified of success/failure
+  - Backend runs OCR (cloud service or on-device)
+  - OCR output is parsed to extract expense data
+  - Extracted data is validated against business rules
+  - User reviews and confirms expense details
+  - Expense is submitted for approval
+  - Manager/admin reviews and approves/rejects
+  - Approved expense is synced to accounting system
+  - User is notified of status
 - At which step should the user review and confirm data?
-- Should OCR results be manually reviewable before sending to InvoicePlane?
-- How are errors handled? (OCR failed? Parsing failed? Invoice creation failed?)
-- Should there be a queue of pending invoices for manual review?
+- Should OCR results be manually reviewable/editable?
+- How are errors handled? (OCR failed? Parsing failed? Submission failed?)
+- Should there be a draft/pending state for expenses?
 
 **Research targets:**
-- OCR accuracy and confidence scores
+- OCR accuracy and confidence scores for receipts
 - Error recovery and manual correction workflows
 - Data validation and business logic
 - User feedback and notifications
+- Integration with accounting/ERP systems
 
 ### 8.4 Multi-User and Account Management
 
 **Questions to research:**
 - How does the NativePHP app handle multiple users? (User login/authentication)
-- Should each user have their own account in the backend?
-- How are scanning privileges controlled? (Can all users scan, or only admins?)
-- How are invoices associated with users? (Who scanned the receipt?)
-- Should there be audit trails for receipts/invoices?
-- How are multi-company scenarios handled?
+- Should each user submit their own expenses, or can admins submit on behalf of others?
+- How are approval hierarchies established? (Who reviews which employees' expenses?)
+- Should there be audit trails for all changes? (Who submitted? Who approved? When? Changes made)
+- How are multi-company or multi-department scenarios handled?
+- Should there be per-user or per-department policies and limits?
+- Can employees see other employees' expense reports? (Privacy considerations)
 
 **Research targets:**
 - User authentication and authorization in NativePHP apps
-- Role-based access control (RBAC)
-- Audit logging for financial transactions
-- Multi-tenancy in Laravel applications
+- Role-based access control (RBAC): Employee, Manager, Finance Admin
+- Organizational hierarchy and approval chains
+- Audit logging for compliance and disputes
+- Multi-tenancy or multi-department support
+- Privacy and data access controls
 
 ---
 
@@ -619,175 +629,241 @@ This prompt is designed for comprehensive research using the Greenfield method, 
 - Input validation and sanitization
 - Request signing and integrity verification
 
-### 11.3 OCR and Data Extraction Security
+### 11.3 OCR and Receipt Data Extraction Security
 
 **Questions to research:**
-- If using a third-party OCR service (e.g., Google Cloud Vision), is data sent in the clear?
-- Should there be data minimization? (Only send crop of relevant area, not full photo)
-- Are OCR results logged or cached?
-- Can OCR results be reversed to reconstruct original images?
-- Should sensitive fields (amounts, dates) be masked before logging?
-- Are there compliance concerns with cloud OCR services? (HIPAA, PCI-DSS, GDPR)
+- If using a third-party OCR service (e.g., Google Cloud Vision), is data sent in the clear (HTTPS only)?
+- Should there be data minimization? (Only send relevant portion of receipt, not full photo with identifying info?)
+- Are OCR results logged or cached by the OCR service?
+- Should receipt images be sent to OCR at all, or should extraction happen server-side on encrypted images?
+- Should sensitive fields (amounts, cardholder info) be masked before logging?
+- Are there compliance concerns with cloud OCR services? (GDPR data processing, data residency, CCPA)
+- Can OCR results be reversed to reconstruct original receipt images?
+- Should OCR API keys be rotated regularly?
+- What happens if an OCR service is breached? Are receipt images exposed?
 
 **Research targets:**
-- Third-party OCR service security
-- Data minimization in computer vision
-- Privacy-preserving machine learning
-- Compliance and regulatory requirements
+- Third-party OCR service security and compliance
+- Data minimization in OCR processing
+- HTTPS enforcement and certificate pinning
+- Privacy-preserving OCR approaches
+- GDPR, CCPA, and data residency requirements
+- API key management and rotation
+- Vendor security assessment criteria
 
 ---
 
 ## 12. USER EXPERIENCE AND WORKFLOW
 
-### 12.1 Scanning Workflow
+### 12.1 Receipt Scanning and Expense Submission Workflow
 
 **Questions to research:**
-- What is the ideal user flow for receipt scanning?
-  - Open app → Camera → Capture receipt → Review OCR results → Confirm → Submit
+- What is the ideal user flow for expense reporting?
+  - Open app → Camera → Capture receipt → Review OCR results → Edit if needed → Categorize → Add notes → Submit
 - At which steps can the user review or correct data?
+  - After OCR extraction (verify restaurant name, amount, date)
+  - During categorization (select expense category, project/cost center)
+  - Before submission (final review)
 - Should users be able to capture multiple receipts in one session?
-- Should there be a "batch mode" for scanning multiple receipts quickly?
-- How are scanned receipts grouped? (By date? By vendor? By category?)
-- Can users add notes or metadata to receipts?
-- Should there be a "undo" option if a receipt is scanned incorrectly?
+- Should there be a "batch mode" for scanning multiple receipts at once?
+- How should receipts be grouped? (By date submitted? By category? By trip?)
+- Can users add notes, business purpose, or attendees to expenses?
+- Should there be an "undo" option if a receipt is scanned incorrectly?
+- What happens after submission? (Confirmation? Status tracking? Approval notifications?)
 
 **Research targets:**
-- Mobile UX best practices for data capture
+- Mobile UX best practices for financial data capture
 - Form validation and error handling in mobile apps
 - Batch processing workflows
-- Metadata and tagging systems
+- Metadata and categorization systems
+- Status tracking and notification UX
 
-### 12.2 Feedback and Guidance
+### 12.2 Real-Time Guidance and Feedback
 
 **Questions to research:**
-- Should the app provide real-time guidance while capturing? ("Hold steady", "Move closer", "Better lighting")
-- After OCR, should the app display confidence scores for extracted data?
-- Should users be able to manually edit OCR results?
-- Should there be a "tutorial" mode for first-time users?
-- How should errors be communicated? (Dismissible alerts? Persistent errors?)
-- Should there be a "success" confirmation when receipt is submitted?
+- Should the app provide real-time guidance while capturing? ("Hold steady", "Move closer", "Better lighting", "Receipt in frame")
+- Should the app show a preview of what OCR will extract before submission?
+- Should the app display confidence scores for extracted data? (95% confident in amount, 80% in restaurant name)
+- Should users be able to manually edit OCR results inline, or in a separate correction screen?
+- Should there be a "tutorial" mode or onboarding for first-time users?
+- How should errors be communicated? (Inline validation? Toast alerts? Modal dialogs?)
+- Should there be a "success" confirmation after submission?
+- Should users receive status updates as their expense moves through approval?
+- Should there be guidance on policy compliance? (Amount limits, required categories, approval threshold)
 
 **Research targets:**
 - UX patterns for camera apps
-- Real-time feedback and guidance
-- Confidence visualization
+- Real-time feedback and progressive validation
+- Confidence visualization and interpretation
 - Error messaging and recovery
+- Onboarding and tutorials
+- Status tracking and notifications
+- Policy guidance and compliance helpers
 
-### 12.3 Accessibility
+### 12.3 Accessibility and Inclusivity
 
 **Questions to research:**
-- Is the app accessible to users with visual impairments? (Screen reader support)
-- Is the app accessible to users with mobility impairments? (One-handed operation)
+- Is the app accessible to users with visual impairments? (Screen reader support, high contrast mode)
+- Is the app accessible to users with mobility impairments? (One-handed operation, voice controls)
 - Are colors chosen with colorblind users in mind?
-- Is text large enough to read? (Font sizes)
-- Are there alternative input methods? (Voice commands? Gesture controls?)
-- Is the app localized for different languages?
+- Is text large enough to read without zooming?
+- Are there alternative input methods? (Voice commands? Voice-to-text for notes?)
+- Should the app support multiple languages?
+- Should there be accessibility for users with dyslexia or cognitive impairments?
+- Is the receipt capture flow easy to understand for non-technical users?
 
 **Research targets:**
 - WCAG accessibility guidelines
 - Mobile accessibility best practices
 - Inclusive design principles
+- Voice accessibility and voice-to-text
+- Internationalization and localization
 
 ---
 
 ## 13. ALTERNATIVE ARCHITECTURES AND APPROACHES
 
-### 13.1 On-Device Processing
+### 13.1 OCR Service Selection
 
 **Questions to research:**
-- Could OCR, image processing, and invoice parsing happen entirely on the device?
-- Are there mobile OCR libraries? (Tesseract for Android/iOS?)
-- What are the pros/cons of on-device vs. server-side processing?
-- How does on-device processing impact battery, heat, and storage?
-- Is on-device processing more private/secure? (No data leaves device)
-- What is the accuracy difference between on-device and cloud OCR?
+- Should receipts be processed with cloud OCR (Google, AWS, Azure) or on-device (Tesseract)?
+- What are the pros/cons of each approach?
+  - **Cloud OCR:** Higher accuracy, specialized receipt models, but latency and cost
+  - **On-Device OCR:** Privacy, offline capability, but lower accuracy, battery drain, storage
+- Should there be a hybrid approach? (On-device for speed, cloud for accuracy/validation)
+- Should OCR service be selected based on receipt type or quality?
+- What is the cost difference at scale?
+- Can OCR services be easily switched or used as fallbacks?
 
 **Research targets:**
 - Tesseract OCR for Android/iOS
 - On-device machine learning models (TensorFlow Lite, Core ML)
-- Privacy-first architectures
-- Performance trade-offs
+- Cloud OCR service comparison and pricing
+- Privacy-first OCR approaches
+- OCR accuracy benchmarks for receipts
 
-### 13.2 Queue-Based Processing
+### 13.2 Synchronous vs. Asynchronous Processing
 
 **Questions to research:**
-- Instead of processing immediately, could photos be queued for batch processing?
-- Would queuing improve performance (no need to wait for processing)?
-- Would queuing improve reliability (retry failed processing)?
-- Would queuing enable background processing (process while user does other things)?
-- What is the UX like when processing is delayed? (How long do users wait?)
-- Should there be progress notifications?
+- Should OCR and parsing happen synchronously (user waits) or asynchronously (happens in background)?
+- **Synchronous:** Immediate feedback, user sees results, but slower (can be 5-30 seconds)
+- **Asynchronous:** Fast submission, background processing, but delayed feedback
+- What is acceptable user wait time?
+- Should there be a "fast mode" (submit now) vs. "verified mode" (wait for OCR)?
+- Should users receive notifications when processing completes?
+- Should there be a queue/draft system for pending expenses?
 
 **Research targets:**
 - Job queues in Laravel (Redis Queue, Database Queue)
-- Async task processing
-- Background jobs and scheduling
-- Webhook notifications for async completion
+- Async task processing and background jobs
+- Webhooks or WebSocket notifications for completion
+- Progressive submission workflows
 
-### 13.3 Hybrid Approaches
+### 13.3 Approval Workflow Architectures
 
 **Questions to research:**
-- Could OCR happen on-device, while invoice parsing happens on the server?
-- Could a lightweight OCR (e.g., simple text detection) happen on-device, with full OCR on the server as a fallback?
-- Could the app cache models locally to reduce network traffic?
-- Could processing be distributed across multiple devices (e.g., peer-to-peer)?
+- Should expenses be auto-approved based on rules, or always require manager approval?
+- **Rules-based:** Low-amount expenses auto-approve, high-amount require approval
+- **Universal approval:** All expenses go through manager
+- **Tiered approval:** Small amounts auto-approve, medium amounts manager approves, large amounts require finance approval
+- Can approval rules be customized per department or employee?
+- Should there be escalation for exceptional expenses?
+- Can employees appeal rejections?
 
 **Research targets:**
-- Hybrid client-server architectures
-- Model compression and caching
-- Distributed processing and P2P networks
+- Workflow engines and rules engines
+- Multi-level approval systems
+- Role-based access control
+- Configurable business rules
+- Appeals and exceptions handling
+
+### 13.4 Hybrid Approaches (Combining Multiple Technologies)
+
+**Questions to research:**
+- Could a lightweight text detection happen on-device, with full OCR validation on the server?
+- Could the app use multiple OCR services and pick the best result?
+- Could machine learning help identify which receipts need manual review?
+- Could peer review (employees reviewing each other's submissions) complement automated checks?
+- Could historical expense patterns help detect anomalies?
+
+**Research targets:**
+- Ensemble methods combining multiple OCR results
+- Anomaly detection for fraud prevention
+- Peer review workflows
+- Historical data analysis for pattern detection
 
 ---
 
 ## 14. TESTING AND VERIFICATION STRATEGIES
 
-### 14.1 Image Processing Testing
+### 14.1 Receipt Image Quality Testing
 
 **Questions to research:**
-- How can the color detection algorithm be tested?
-- What test cases are needed? (Different lighting conditions, cube angles, reflections)
-- Should there be a benchmark set of "golden" photos with known results?
-- How is accuracy measured? (Precision, recall, F1 score)
-- Should there be regression testing to prevent performance degradation?
-- How can edge cases be identified? (Worst-case scenarios)
+- How can receipt image quality be assessed?
+- What test cases are needed? (Various lighting conditions, angles, document sizes, paper conditions)
+- Should there be a benchmark set of "golden" receipt photos with known OCR results?
+- How is accuracy measured for the quality assessment? (Sharpness, contrast, text legibility metrics)
+- Should there be regression testing to ensure quality checks don't become too strict or loose?
+- How can edge cases be identified? (Wrinkled paper, faded ink, poor lighting, blur)
 
 **Research targets:**
-- Computer vision testing frameworks
-- Benchmark datasets for image processing
-- Metrics for evaluating detection accuracy
-- Continuous integration for vision pipelines
+- Image quality metrics (sharpness, contrast, brightness)
+- Benchmark datasets for receipt images
+- Metrics for evaluating quality detection accuracy
+- Continuous integration for image quality assessment
 
-### 14.2 OCR Testing
+### 14.2 OCR and Receipt Parsing Testing
 
 **Questions to research:**
-- How can OCR accuracy be measured?
-- What is the expected accuracy for printed vs. handwritten text?
-- Should there be different models for different receipt formats?
-- How are edge cases tested? (Faded text, stamps, signatures)
-- Should there be human review of OCR results?
-- How is OCR quality tracked over time?
+- How can OCR accuracy be measured on restaurant receipts?
+- What is the expected accuracy for printed receipt text?
+- Should there be different models/approaches for different restaurant POS systems?
+- How are edge cases tested? (Faded text, stamps, handwritten items, signatures)
+- What test data is needed? (Real receipts from various restaurants? Synthetic data?)
+- Should OCR results be tracked over time to detect degradation?
+- How should parsing accuracy be measured? (Correctly extracted restaurant name? Amount? Date?)
 
 **Research targets:**
-- OCR accuracy metrics (WER, CER)
-- Tesseract training and fine-tuning
-- Handwriting recognition
-- OCR quality monitoring
+- OCR accuracy metrics (WER, CER, character-level accuracy)
+- Receipt parsing accuracy metrics
+- Benchmark datasets for restaurant receipts
+- OCR/parsing quality monitoring and regression testing
 
-### 14.3 Integration Testing
+### 14.3 End-to-End Expense Submission Testing
 
 **Questions to research:**
-- How can the end-to-end flow be tested? (Capture → Process → Extract → InvoicePlane)
+- How can the complete flow be tested? (Capture → OCR → Parse → Review → Submit → Approval)
 - Should tests use real photos or synthetic/mock data?
 - How can network failures be simulated?
-- Should there be staging/sandbox environment for testing against InvoicePlane?
-- How are permission scenarios tested? (Camera permission denied, storage permission denied)
-- Should there be load testing? (How many concurrent users can the system handle?)
+- Should there be staging/sandbox environment for testing approval workflows?
+- How are permission scenarios tested? (Camera permission denied, storage access denied)
+- Should there be load testing? (100 concurrent users submitting expenses? 1,000?)
+- How should fraudulent expense detection be tested?
 
 **Research targets:**
 - End-to-end testing frameworks for mobile apps
 - Test data generation and mocking
 - Load testing and stress testing
-- Staging environments and sandbox APIs
+- Staging environments and sandbox approval systems
+- Fraud detection testing and edge cases
+- Multi-user concurrency testing
+
+### 14.4 Fraud and Compliance Testing
+
+**Questions to research:**
+- How should duplicate expense detection be tested?
+- How can receipt authenticity be verified?
+- Should there be tests for tampered OCR results or manipulated amounts?
+- How should policy violations be tested? (Expenses exceeding limits, unauthorized merchants)
+- Should there be audit trail verification tests?
+- How are sensitive data protection tests performed?
+
+**Research targets:**
+- Duplicate detection algorithms and testing
+- Receipt authenticity verification methods
+- Fraud detection and prevention testing
+- Compliance and audit trail verification
+- Data protection and privacy testing
 
 ---
 
@@ -805,37 +881,41 @@ These questions are designed to be asked of Claude or other AI assistants to exp
 2. **On Camera Integration:**
    - "Describe the complete Android Intent flow when Camera::getPhoto() is called. What broadcasts occur? What permissions are checked?"
    - "How does iOS handle camera access differently from Android?"
-   - "What is the maximum recommended photo resolution for mobile devices, and how does this affect processing time?"
+   - "What is the maximum recommended photo resolution for mobile devices, and how does this affect OCR accuracy and processing time?"
 
-3. **On Image Processing:**
-   - "Explain the mathematical principles behind perspective transformation. How does it correct angle distortion?"
-   - "How would you improve the Canny edge detection parameters for low-light conditions?"
-   - "What HSV color ranges would you use for detecting worn Rubik's cube stickers, and how would you handle lighting variations?"
+3. **On OCR and Receipt Processing:**
+   - "Compare OCR services (Google Vision, AWS Textract, Azure) for restaurant receipt extraction. Which is best for this use case and why?"
+   - "Design a receipt parsing algorithm that extracts: restaurant name, date, items, amounts, tax, tip, total. How would you handle variations in receipt formats?"
+   - "How would you implement confidence scoring for OCR results? What thresholds would you use for auto-approval vs. manual review?"
 
-4. **On Receipt Scanning:**
-   - "Design a complete receipt scanning pipeline from capture to InvoicePlane integration. What are the critical points of failure?"
-   - "How would you validate OCR results to detect hallucinations or incorrect readings?"
-   - "What data quality checks would you implement before creating an invoice in InvoicePlane?"
+4. **On Receipt Scanning for Expense Reports:**
+   - "Design a complete restaurant receipt scanning pipeline from capture to expense approval. What are the critical points of failure?"
+   - "How would you detect and prevent fraudulent or duplicate expense submissions?"
+   - "What data quality checks would you implement before auto-approving an expense vs. requiring manager approval?"
 
 5. **On Scaling:**
-   - "How would you architect this system to handle 1,000 concurrent users scanning receipts?"
+   - "How would you architect this system to handle 10,000 employees submitting expenses daily (100K+ receipts/month)?"
    - "What are the infrastructure costs for OCR processing at scale (1M receipts/month)?"
-   - "How would you handle geographic distribution of processing services?"
+   - "How would you handle geographic distribution of OCR services for multi-country deployments?"
+   - "How would you implement tiered processing (fast-track for low-value expenses, detailed review for high-value)?"
 
-6. **On Security:**
-   - "Design a threat model for a receipt scanning app. What are the most critical attack surfaces?"
-   - "How would you implement end-to-end encryption for sensitive financial data?"
-   - "What compliance requirements apply to storing receipt images? (GDPR, CCPA, HIPAA, PCI-DSS)"
+6. **On Security and Compliance:**
+   - "Design a threat model for an expense reporting app with receipt scanning. What are the most critical attack surfaces?"
+   - "How would you implement end-to-end encryption for sensitive financial data (receipt images, expense amounts)?"
+   - "What compliance requirements apply to storing receipt images? (GDPR, CCPA, HIPAA, PCI-DSS, SOX, tax regulations)"
+   - "How would you detect and prevent expense fraud? (Duplicate submissions, fake receipts, OCR manipulation)"
 
 7. **On Optimization:**
-   - "Profile the current Rubik's cube scanning app. Where are the bottlenecks?"
-   - "How would you optimize photo compression while maintaining OCR quality?"
-   - "Design a caching strategy for OCR results to reduce API calls."
+   - "Profile an expense receipt scanning app. Where are the bottlenecks? (Photo capture? OCR latency? Submission? Approval workflow?)"
+   - "How would you optimize photo compression while maintaining OCR accuracy?"
+   - "Design a caching strategy for OCR results to reduce API calls (e.g., same restaurant receipts)."
+   - "How would you implement progressive receipt processing? (Quick submission with deferred validation)"
 
 8. **On User Experience:**
-   - "Describe the ideal user journey for capturing and submitting a receipt. What are the pain points?"
-   - "How would you provide real-time feedback to guide users to take better photos?"
+   - "Describe the ideal user journey for capturing a restaurant receipt and submitting an expense. What are the pain points?"
+   - "How would you provide real-time guidance to help users take better photos? (Angle, lighting, framing)"
    - "Design a system for users to manually correct OCR errors and provide feedback for model improvement."
+   - "How would you make the expense approval workflow transparent to employees? (Status tracking, rejection feedback)"
 
 ---
 
@@ -858,15 +938,28 @@ This prompt can be used to guide comprehensive research using Claude or other AI
 
 **In this repository:**
 - `config/nativephp.php` - NativePHP configuration and permissions
-- `app/NativeComponents/RubiksScan.php` - Camera capture and photo handling
-- `routes/mobile.php` - API routes for image processing and solving
-- `python/cube_scanner.py` - OpenCV image processing pipeline
-- `resources/views/native/rubiks-scan.blade.php` - Native UI for camera
+- `app/NativeComponents/ReceiptScan.php` (or similar) - Camera capture and photo handling for receipts
+- `routes/mobile.php` - API routes for OCR processing, expense submission, and approval workflows
+- `app/Services/OCRService.php` (or similar) - OCR integration with cloud services
+- `app/Services/ReceiptParsingService.php` (or similar) - Receipt data extraction and validation
+- `resources/views/native/receipt-scan.blade.php` - Native UI for camera
+- `resources/views/native/expense-review.blade.php` - Native UI for expense review before submission
+
+**Key Features to Implement:**
+- OCR result confidence scoring and manual correction workflows
+- Expense validation rules and business logic
+- Multi-level approval workflows
+- Receipt image attachment and archival
+- Audit logging for compliance
+- Integration with accounting systems
+- Duplicate detection and fraud prevention
 
 **External Resources:**
 - [NativePHP Documentation](https://nativephp.com)
 - [Laravel Documentation](https://laravel.com/docs)
-- [OpenCV Documentation](https://docs.opencv.org/)
+- [Google Cloud Vision API](https://cloud.google.com/vision/docs)
+- [AWS Textract](https://aws.amazon.com/textract/)
+- [Azure Computer Vision](https://azure.microsoft.com/en-us/services/cognitive-services/computer-vision/)
 - [Android Developer Documentation](https://developer.android.com)
 - [iOS Developer Documentation](https://developer.apple.com/ios)
 
