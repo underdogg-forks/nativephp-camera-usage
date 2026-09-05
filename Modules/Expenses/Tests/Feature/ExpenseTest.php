@@ -169,4 +169,46 @@ class ExpenseTest extends FeatureTestCase
         $this->assertNotNull($retrieved->category);
         $this->assertEquals('Travel', $retrieved->category->category_name);
     }
+
+    #[Test]
+    public function it_fails_to_create_expense_without_expense_number(): void
+    {
+        /* Arrange */
+        $user = User::find(1);
+        $category = ExpenseCategory::factory()->create();
+
+        $payload = [
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'expense_status' => ExpenseStatus::DRAFT->value,
+            'expense_type' => ExpenseType::FIXED->value,
+            'expensed_at' => now(),
+            'expense_amount' => 100.00,
+            'currency' => 'USD',
+        ];
+
+        /* Act & Assert */
+        $this->expectException(\Illuminate\Database\QueryException::class);
+        Expense::create($payload);
+    }
+
+    #[Test]
+    public function it_fails_to_create_expense_without_user_id(): void
+    {
+        /* Arrange */
+        $category = ExpenseCategory::factory()->create();
+
+        $payload = [
+            'category_id' => $category->id,
+            'expense_number' => 'EXP-TEST',
+            'expense_status' => ExpenseStatus::DRAFT->value,
+            'expense_type' => ExpenseType::FIXED->value,
+            'expensed_at' => now(),
+            'expense_amount' => 100.00,
+        ];
+
+        /* Act & Assert */
+        $this->expectException(\Illuminate\Database\QueryException::class);
+        Expense::create($payload);
+    }
 }
