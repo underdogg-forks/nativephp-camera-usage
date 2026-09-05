@@ -68,11 +68,14 @@ class CameraToStorageFlowTest extends FeatureTestCase
         /** Act */
         $expense = Expense::create([
             'user_id' => 1,
-            'amount' => 25.50,
+            'expense_number' => 'EXP-0001',
+            'expense_amount' => 25.50,
             'currency' => 'USD',
             'receipt_path' => $storagePath,
             'description' => 'Restaurant expense',
-            'expense_date' => now(),
+            'expensed_at' => now(),
+            'expense_type' => 'one_time',
+            'expense_status' => 'draft',
         ]);
 
         /** Assert */
@@ -182,20 +185,22 @@ class CameraToStorageFlowTest extends FeatureTestCase
         /** Act */
         $expense = Expense::create([
             'user_id' => 1,
-            'amount' => 45.75,
+            'expense_number' => 'EXP-0002',
+            'expense_amount' => 45.75,
             'currency' => 'USD',
             'receipt_path' => $storagePath,
             'description' => 'Lunch meeting',
-            'expense_date' => now(),
-            'status' => 'pending',
+            'expensed_at' => now(),
+            'expense_status' => 'draft',
+            'expense_type' => 'one_time',
         ]);
 
         /** Assert */
         $this->assertDatabaseHas('expenses', [
             'user_id' => 1,
-            'amount' => 45.75,
+            'expense_amount' => 45.75,
             'receipt_path' => $storagePath,
-            'status' => 'pending',
+            'expense_status' => 'draft',
         ]);
         $this->assertNotNull($expense->id);
     }
@@ -224,11 +229,14 @@ class CameraToStorageFlowTest extends FeatureTestCase
 
         $expense = Expense::create([
             'user_id' => 1,
-            'amount' => 32.00,
+            'expense_number' => 'EXP-0003',
+            'expense_amount' => 32.00,
             'currency' => 'USD',
             'receipt_path' => $storagePath,
             'description' => 'Client dinner',
-            'expense_date' => now(),
+            'expensed_at' => now(),
+            'expense_status' => 'draft',
+            'expense_type' => 'one_time',
         ]);
 
         /** Act */
@@ -236,7 +244,7 @@ class CameraToStorageFlowTest extends FeatureTestCase
 
         /** Assert */
         $this->assertEquals($storagePath, $retrievedExpense->receipt_path);
-        $this->assertEquals(32.00, $retrievedExpense->amount);
+        $this->assertEquals(32.00, $retrievedExpense->expense_amount);
     }
 
     #[Test]
@@ -284,15 +292,18 @@ class CameraToStorageFlowTest extends FeatureTestCase
         /** Act */
         $expense = Expense::create([
             'user_id' => 1,
-            'amount' => 50.00,
+            'expense_number' => 'EXP-0004',
+            'expense_amount' => 50.00,
             'currency' => 'USD',
             'receipt_path' => $storagePath,
             'description' => 'Expense with default date',
-            'expense_date' => $now,
+            'expensed_at' => $now,
+            'expense_status' => 'draft',
+            'expense_type' => 'one_time',
         ]);
 
         /** Assert */
-        $this->assertEquals($now->format('Y-m-d'), $expense->expense_date->format('Y-m-d'));
+        $this->assertEquals($now->format('Y-m-d'), $expense->expensed_at->format('Y-m-d'));
     }
 
     #[Test]
@@ -321,20 +332,26 @@ class CameraToStorageFlowTest extends FeatureTestCase
         /** Act */
         $expense1 = Expense::create([
             'user_id' => 1,
-            'amount' => 25.00,
+            'expense_number' => 'EXP-0005',
+            'expense_amount' => 25.00,
             'currency' => 'USD',
             'receipt_path' => $storagePath,
             'description' => 'Expense 1',
-            'expense_date' => now(),
+            'expensed_at' => now(),
+            'expense_status' => 'draft',
+            'expense_type' => 'one_time',
         ]);
 
         $expense2 = Expense::create([
             'user_id' => 2,
-            'amount' => 25.00,
+            'expense_number' => 'EXP-0006',
+            'expense_amount' => 25.00,
             'currency' => 'USD',
             'receipt_path' => $storagePath,
             'description' => 'Expense 2',
-            'expense_date' => now(),
+            'expensed_at' => now(),
+            'expense_status' => 'draft',
+            'expense_type' => 'one_time',
         ]);
 
         /** Assert */
@@ -352,11 +369,14 @@ class CameraToStorageFlowTest extends FeatureTestCase
 
         $expense = Expense::create([
             'user_id' => 1,
-            'amount' => 30.00,
+            'expense_number' => 'EXP-0007',
+            'expense_amount' => 30.00,
             'currency' => 'USD',
             'receipt_path' => $storagePath,
             'description' => 'Expense to delete',
-            'expense_date' => now(),
+            'expensed_at' => now(),
+            'expense_status' => 'draft',
+            'expense_type' => 'one_time',
         ]);
 
         /** Act */
@@ -375,11 +395,14 @@ class CameraToStorageFlowTest extends FeatureTestCase
 
         $expense = Expense::create([
             'user_id' => 1,
-            'amount' => 55.50,
+            'expense_number' => 'EXP-0008',
+            'expense_amount' => 55.50,
             'currency' => 'USD',
             'receipt_path' => $storagePath,
             'description' => 'Queryable expense',
-            'expense_date' => now(),
+            'expensed_at' => now(),
+            'expense_status' => 'draft',
+            'expense_type' => 'one_time',
         ]);
 
         /** Act */
