@@ -6,10 +6,11 @@ The Expenses module has been rebuilt following **Test-Driven Development (TDD)**
 
 ## Test Results
 
-✅ **13 Core Tests — 100% Passing**
+✅ **15 Core Tests — 100% Passing**
 - 7 Expense model tests
 - 6 ExpenseCategory model tests
-- 30 assertions total
+- 2 ExpenseCategory seeder tests
+- 39 assertions total
 - Zero failures
 
 ### Test Coverage
@@ -30,6 +31,10 @@ The Expenses module has been rebuilt following **Test-Driven Development (TDD)**
 - ✅ Deletes categories with soft delete behavior
 - ✅ Lists all categories
 - ✅ Validates required category_name field
+
+**ExpenseCategorySeederTest.php (2 tests)**
+- ✅ Seeds default expense categories (all 7 created)
+- ✅ Idempotent seeding (safe to run multiple times)
 
 ## Architecture
 
@@ -78,16 +83,14 @@ created_at, updated_at → Timestamps
 **ExpenseType.php**
 ```php
 enum ExpenseType: string {
-    case FIXED = 'fixed'
-    case ONE_TIME = 'one_time'
-    case RECURRING = 'recurring'
-    case TRAVEL = 'travel'
-    case UTILITY = 'utility'
-    case MAINTENANCE = 'maintenance'
+    case FIXED = 'fixed'              // One-time fixed amount
+    case ONE_TIME = 'one_time'        // Single occurrence
+    case RECURRING = 'recurring'      // Repeating pattern
     
     // Methods: label(), color() for UI
 }
 ```
+*Note: Expense purpose/category (Travel, Meals, Utilities, etc.) is handled by ExpenseCategory model, not by type enum. This separates recurrence patterns (type) from categorization (category).*
 
 **ExpenseStatus.php**
 ```php
@@ -116,6 +119,24 @@ enum ExpenseStatus: string {
 - Generates unique category names
 - Optional descriptions
 - Clean, minimal data generation
+
+### Seeders
+
+**ExpenseCategorySeeder.php**
+- Seeds 7 default expense categories:
+  - Travel (transportation, flights, accommodations)
+  - Meals (client meals, team lunches, business dining)
+  - Utilities (electric, water, internet, phone)
+  - Maintenance (equipment repairs, facility upkeep)
+  - Office Supplies (stationery, equipment, furniture)
+  - Software (subscriptions, licenses, cloud services)
+  - Professional Services (legal, accounting, consulting)
+- Idempotent: Uses `firstOrCreate()` to allow safe repeated runs
+- Can be extended: Users can add custom categories after initial seeding
+
+**DatabaseSeeder.php**
+- Main entry point: Calls ExpenseCategorySeeder
+- Run with: `php artisan db:seed --class=Modules\Expenses\Database\Seeders\DatabaseSeeder`
 
 ### Tests Setup
 
@@ -223,6 +244,8 @@ Modules/Expenses/
 │   │   ├── 2024_09_03_000000_create_expense_categories_table.php
 │   │   └── 2024_09_03_000001_create_expenses_table.php
 │   └── Seeders/
+│       ├── DatabaseSeeder.php
+│       └── ExpenseCategorySeeder.php
 ├── Enums/
 │   ├── ExpenseStatus.php
 │   └── ExpenseType.php
@@ -235,7 +258,8 @@ Modules/Expenses/
 │   └── Feature/
 │       ├── FeatureTestCase.php
 │       ├── ExpenseTest.php (7 tests, passing)
-│       └── ExpenseCategoryTest.php (6 tests, passing)
+│       ├── ExpenseCategoryTest.php (6 tests, passing)
+│       └── ExpenseCategorySeederTest.php (2 tests, passing)
 └── Routes/
     ├── api.php (to be created)
     └── web.php (to be created)
@@ -255,6 +279,16 @@ php artisan test Modules/Expenses/Tests/ --coverage
 
 # Run with verbose output
 php artisan test Modules/Expenses/Tests/ --testdox
+```
+
+## Running Seeders
+
+```bash
+# Seed default expense categories
+php artisan db:seed --class=Modules\Expenses\Database\Seeders\DatabaseSeeder
+
+# Or call the seeder directly
+php artisan db:seed --class=Modules\Expenses\Database\Seeders\ExpenseCategorySeeder
 ```
 
 ## Key Design Decisions
@@ -277,5 +311,6 @@ php artisan test Modules/Expenses/Tests/ --testdox
 ---
 
 **Built with:** Laravel 13 + NativePHP Mobile + PHPUnit 11.5.56  
-**Last Updated:** 2026-09-03  
-**Status:** ✅ Core models complete, ready for API implementation
+**Last Updated:** 2026-09-05  
+**Status:** ✅ Core models complete with default seeders, ready for API implementation  
+**Test Coverage:** 15/15 passing (7 Expense + 6 Category + 2 Seeder tests)
