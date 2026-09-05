@@ -6,16 +6,16 @@ The Expenses module has been rebuilt following **Test-Driven Development (TDD)**
 
 ## Test Results
 
-✅ **15 Core Tests — 100% Passing**
-- 7 Expense model tests
+✅ **17 Core Tests — 100% Passing**
+- 9 Expense model tests (CRUD + validation)
 - 6 ExpenseCategory model tests
 - 2 ExpenseCategory seeder tests
-- 39 assertions total
+- 41 assertions total
 - Zero failures
 
 ### Test Coverage
 
-**ExpenseTest.php (7 tests)**
+**ExpenseTest.php (9 tests)**
 - ✅ Creates expense with enums and relationships
 - ✅ Retrieves expenses by ID
 - ✅ Updates expense status and fields
@@ -23,6 +23,8 @@ The Expenses module has been rebuilt following **Test-Driven Development (TDD)**
 - ✅ Lists user expenses with filtering
 - ✅ Casts expense_status and expense_type enums correctly
 - ✅ Retrieves expenses with eager-loaded categories
+- ✅ Fails without required expense_number field (validation)
+- ✅ Fails without required user_id field (validation)
 
 **ExpenseCategoryTest.php (6 tests)**
 - ✅ Creates expense categories
@@ -312,5 +314,5 @@ php artisan db:seed --class=Modules\Expenses\Database\Seeders\ExpenseCategorySee
 
 **Built with:** Laravel 13 + NativePHP Mobile + PHPUnit 11.5.56  
 **Last Updated:** 2026-09-05  
-**Status:** ✅ Core models complete with default seeders, ready for API implementation  
-**Test Coverage:** 15/15 passing (7 Expense + 6 Category + 2 Seeder tests)
+**Status:** ✅ Core models complete with validation and default seeders, ready for API implementation  
+**Test Coverage:** 17/17 passing (9 Expense + 6 Category + 2 Seeder tests, 41 assertions)
