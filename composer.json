@@ -12,6 +12,7 @@
         "php": "^8.4",
         "internachi/modular": "*",
         "laravel/framework": "^13.0",
+        "laravel/sanctum": "*",
         "laravel/tinker": "^3.0",
         "nativephp/mobile": "dev-main as 4.9.9",
         "nativephp/mobile-camera": "^1.0",
