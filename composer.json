@@ -15,6 +15,7 @@
         "laravel/framework": "^13.0",
         "laravel/sanctum": "*",
         "laravel/tinker": "^3.0",
+        "modules/core": "*",
         "modules/expenses": "*",
         "nativephp/mobile": "dev-main as 4.9.9",
         "nativephp/mobile-camera": "^1.0",
@@ -41,7 +42,8 @@
     "autoload-dev": {
         "psr-4": {
             "Tests\\": "tests/",
-            "Modules\\Expenses\\Tests\\": "app-modules/expenses/tests/"
+            "Modules\\Expenses\\Tests\\": "app-modules/expenses/tests/",
+            "Modules\\Core\\Tests\\": "app-modules/core/tests/"
         }
     },
     "scripts": {

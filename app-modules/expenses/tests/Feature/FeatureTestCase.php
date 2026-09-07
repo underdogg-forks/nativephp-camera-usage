@@ -21,7 +21,8 @@ abstract class FeatureTestCase extends TestCase
     protected function runModuleMigrations(): void
     {
         Artisan::call('migrate', [
-            '--path' => 'Modules/Expenses/Database/Migrations',
+            '--path' => 'app-modules/expenses/database/migrations',
+            '--realpath' => false,
         ]);
     }
 

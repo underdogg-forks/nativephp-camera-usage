@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d7ef1f462d114128cbbf8830471418b3",
+    "content-hash": "9acf969064851c85ef070a61b536c9bb",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -4475,6 +4475,41 @@
                 "source": "https://github.com/marc-mabe/php-enum/tree/v4.7.2"
             },
             "time": "2025-09-14T11:18:39+00:00"
+        },
+        {
+            "name": "modules/core",
+            "version": "dev-claude/nativephp-camera-docs-fuy597",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/core",
+                "reference": "cc6bd6dd6ef43520a8eeea98f5b4a48610197697"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Modules\\Core\\Providers\\CoreServiceProvider",
+                        "Modules\\Core\\Filament\\CompanyPanelProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Modules\\Core\\": "src/",
+                    "Modules\\Core\\Database\\Factories\\": "database/factories/",
+                    "Modules\\Core\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Modules\\Core\\Tests\\": "tests/"
+                }
+            },
+            "description": "Multi-tenant (Company) foundation: tenancy, roles, and the Filament Company panel",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "modules/expenses",
