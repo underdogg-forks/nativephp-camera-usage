@@ -10,11 +10,20 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
+        "filament/filament": "^5.6",
+        "internachi/modular": "*",
         "laravel/framework": "^13.0",
+        "laravel/sanctum": "*",
         "laravel/tinker": "^3.0",
+        "modules/clients": "*",
+        "modules/core": "*",
+        "modules/expenses": "*",
+        "modules/invoices": "*",
+        "modules/products": "*",
         "nativephp/mobile": "dev-main as 4.9.9",
         "nativephp/mobile-camera": "^1.0",
-        "nativephp/mobile-ui": "0.4.0"
+        "nativephp/mobile-ui": "0.4.0",
+        "spatie/laravel-permission": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -24,8 +33,7 @@
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
-        "pestphp/pest": "^5.0",
-        "pestphp/pest-plugin-laravel": "^5.0"
+        "phpunit/phpunit": "^10.5 || ^11.0"
     },
     "autoload": {
         "psr-4": {
@@ -36,7 +44,9 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
+            "Tests\\": "tests/",
+            "Modules\\Expenses\\Tests\\": "app-modules/expenses/tests/",
+            "Modules\\Core\\Tests\\": "app-modules/core/tests/"
         }
     },
     "scripts": {
@@ -93,7 +103,6 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
-            "pestphp/pest-plugin": true,
             "php-http/discovery": true
         }
     },
@@ -101,6 +110,13 @@
         {
             "type": "vcs",
             "url": "https://github.com/NativePHP/mobile-air"
+        },
+        {
+            "type": "path",
+            "url": "app-modules/*",
+            "options": {
+                "symlink": true
+            }
         }
     ],
     "minimum-stability": "dev",

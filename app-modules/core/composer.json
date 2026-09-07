@@ -1,0 +1,28 @@
+{
+    "name": "modules/core",
+    "description": "Multi-tenant (Company) foundation: tenancy, roles, and the Filament Company panel",
+    "type": "library",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Modules\\Core\\": "src/",
+            "Modules\\Core\\Database\\Factories\\": "database/factories/",
+            "Modules\\Core\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Core\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\Core\\Providers\\CoreServiceProvider",
+                "Modules\\Core\\Filament\\CompanyPanelProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

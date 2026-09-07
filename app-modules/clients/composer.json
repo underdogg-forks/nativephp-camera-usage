@@ -1,0 +1,26 @@
+{
+    "name": "modules/clients",
+    "description": "Customer/vendor relations (stub: only what Expenses' customer_id/vendor_id foreign keys need)",
+    "type": "library",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Modules\\Clients\\": "src/",
+            "Modules\\Clients\\Database\\Factories\\": "database/factories/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Clients\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\Clients\\Providers\\ClientsServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

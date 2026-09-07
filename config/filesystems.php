@@ -60,6 +60,15 @@ return [
             'report' => false,
         ],
 
+        'expenses' => [
+            'driver' => 'local',
+            'root' => storage_path('app/expenses'),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage/expenses',
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

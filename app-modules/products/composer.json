@@ -1,0 +1,26 @@
+{
+    "name": "modules/products",
+    "description": "Products and product units (stub: only what ExpenseItems' item_id/unit_id foreign keys need)",
+    "type": "library",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Modules\\Products\\": "src/",
+            "Modules\\Products\\Database\\Factories\\": "database/factories/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Products\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\Products\\Providers\\ProductsServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

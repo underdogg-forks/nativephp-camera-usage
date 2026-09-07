@@ -1,0 +1,27 @@
+{
+    "name": "modules/expenses",
+    "description": "Expense tracking, receipt capture, and approval workflow module",
+    "type": "library",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Modules\\Expenses\\": "src/",
+            "Modules\\Expenses\\Database\\Factories\\": "database/factories/",
+            "Modules\\Expenses\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Expenses\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\Expenses\\Providers\\ExpensesServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
