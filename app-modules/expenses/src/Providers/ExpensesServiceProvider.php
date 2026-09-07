@@ -16,7 +16,7 @@ class ExpensesServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
 
         $this->routes();
 
@@ -27,6 +27,6 @@ class ExpensesServiceProvider extends ServiceProvider
     {
         \Illuminate\Support\Facades\Route::middleware('api')
             ->prefix('api')
-            ->group(__DIR__.'/../Routes/api.php');
+            ->group(__DIR__.'/../../routes/api.php');
     }
 }
