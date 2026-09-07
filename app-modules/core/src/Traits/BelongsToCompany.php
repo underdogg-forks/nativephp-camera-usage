@@ -46,7 +46,11 @@ trait BelongsToCompany
     protected static function bootBelongsToCompany(): void
     {
         static::creating(function ($model): void {
-            if (isset($model->company_id) && empty($model->company_id)) {
+            // No isset() guard: when a factory doesn't declare company_id at
+            // all, the attribute is absent rather than null, and isset()
+            // on a missing Eloquent attribute is false — which silently
+            // skipped auto-assignment entirely.
+            if (empty($model->company_id)) {
                 $model->company_id = static::getCurrentCompanyId();
             }
         });
@@ -56,9 +60,13 @@ trait BelongsToCompany
 
             if (null !== $companyId) {
                 $builder->where($builder->getModel()->getTable().'.company_id', $companyId);
-            } elseif (Auth::check()) {
-                $builder->whereRaw('1 = 0');
             }
+
+            // Deliberately does NOT block-all when a user has no resolvable
+            // company: unlike InvoicePlane-v2 (a company-panel-only app),
+            // this app also has a personal, non-tenant REST API/camera flow
+            // where users legitimately have no company. Scoping is opt-in —
+            // it only narrows results once a company context exists.
         });
     }
 }
