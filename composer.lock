@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9acf969064851c85ef070a61b536c9bb",
+    "content-hash": "1563d4c9076aeef47195adc2efcc1699",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -4477,6 +4477,39 @@
             "time": "2025-09-14T11:18:39+00:00"
         },
         {
+            "name": "modules/clients",
+            "version": "dev-claude/nativephp-camera-docs-fuy597",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/clients",
+                "reference": "e4924344db5ed9a41187b97f22c8508a41fc3501"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Modules\\Clients\\Providers\\ClientsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Modules\\Clients\\": "src/",
+                    "Modules\\Clients\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Modules\\Clients\\Tests\\": "tests/"
+                }
+            },
+            "description": "Customer/vendor relations (stub: only what Expenses' customer_id/vendor_id foreign keys need)",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "modules/core",
             "version": "dev-claude/nativephp-camera-docs-fuy597",
             "dist": {
@@ -4540,6 +4573,72 @@
                 }
             },
             "description": "Expense tracking, receipt capture, and approval workflow module",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "modules/invoices",
+            "version": "dev-claude/nativephp-camera-docs-fuy597",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/invoices",
+                "reference": "fd277ee2f5cb900b7ff42c491c4f8ec09d584d06"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Modules\\Invoices\\Providers\\InvoicesServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Modules\\Invoices\\": "src/",
+                    "Modules\\Invoices\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Modules\\Invoices\\Tests\\": "tests/"
+                }
+            },
+            "description": "Invoices (stub: only what Expenses' invoice_id foreign key needs)",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "modules/products",
+            "version": "dev-claude/nativephp-camera-docs-fuy597",
+            "dist": {
+                "type": "path",
+                "url": "app-modules/products",
+                "reference": "d4056a9f4793c45e02b173cf19a1a3fbb69a188a"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Modules\\Products\\Providers\\ProductsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Modules\\Products\\": "src/",
+                    "Modules\\Products\\Database\\Factories\\": "database/factories/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Modules\\Products\\Tests\\": "tests/"
+                }
+            },
+            "description": "Products and product units (stub: only what ExpenseItems' item_id/unit_id foreign keys need)",
             "transport-options": {
                 "symlink": true,
                 "relative": true

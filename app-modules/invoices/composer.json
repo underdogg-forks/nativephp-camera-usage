@@ -1,0 +1,26 @@
+{
+    "name": "modules/invoices",
+    "description": "Invoices (stub: only what Expenses' invoice_id foreign key needs)",
+    "type": "library",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Modules\\Invoices\\": "src/",
+            "Modules\\Invoices\\Database\\Factories\\": "database/factories/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Invoices\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Modules\\Invoices\\Providers\\InvoicesServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
